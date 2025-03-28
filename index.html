@@ -86,28 +86,23 @@
             let isFriday = (day === 5 && hour === 15 && minute >= 30); // Starts at 15:30 on Friday
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
-            document.getElementById("icon").src = isFriday ? "full_cart.png" : "empty_cart.png";
+            document.getElementById("icon").src = isFriday ? "full_cart.jpg" : "empty_cart.png";
 
             // Set the start time for each video (in seconds)
             let videoLeft = document.getElementById("video-left");
             let videoRight = document.getElementById("video-right");
-        
-             if (!isFriday) {
-                let targetTime = new Date();
-                targetTime.setHours(15, 30, 0, 0); // Set target time to 15:30 today
-                let remainingTime = targetTime - now;
-
-                if (remainingTime > 0) {
-                    let days = Math.floor(remainingTime / (1000 * 60 * 60 * 24)); // Calculate days
-                    let hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); // Calculate hours
-                    let minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60)); // Calculate minutes
-                    document.getElementById("remaining-time").textContent = `Over: ${days}d ${hours}h ${minutes}m is het tijd voor het karretje!`;
-                } else {
-                    document.getElementById("remaining-time").textContent = "HET IS TIJD VOOR HET KARRETJE!";
-                }
+            let targetTime = new Date();
+            targetTime.setHours(15, 30, 0, 0); // Set target time to 15:30 today
+            let remainingTime = targetTime - now;
+            if (remainingTime > 0) {
+                let days = Math.floor(remainingTime / (1000 * 60 * 60 * 24)); // Calculate days
+                let hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); // Calculate hours
+                let minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60)); // Calculate minutes
+                document.getElementById("remaining-time").textContent = `Over: ${days}d ${hours}h ${minutes}m is het tijd voor het karretje!`;
             } else {
-                document.getElementById("remaining-time").textContent = "";
+                document.getElementById("remaining-time").textContent = "HET IS TIJD VOOR HET KARRETJE!";
             }
+
         }
         updateMessage();
         setInterval(updateMessage, 60000);
