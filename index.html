@@ -5,24 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vrijdagmelding</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; font-size: 50px; margin-top: 20%; transition: background-color 0.5s; }
-        .yes { background-color: green; color: white; }
-        .no { background-color: red; color: white; }
-        img { width: 100px; margin-top: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            font-size: 50px; 
+            margin-top: 20%; 
+            transition: background-color 0.5s; 
+        }
+        .yes { 
+            background-color: green; 
+            color: white; 
+        }
+        .no { 
+            background-color: red; 
+            color: white; 
+        }
+        img { 
+            width: 150px; /* Increased size */
+            margin-top: 20px;
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
+            transition: transform 0.3s ease; /* Smooth scale effect */
+        }
+        img:hover {
+            transform: scale(1.1); /* Slight zoom on hover */
+        }
     </style>
 </head>
 <body>
     <div id="message"></div>
-    <img id="icon" src="">
+    <img id="icon" src="" alt="Winkelwagen">
     <script>
         function updateMessage() {
             let now = new Date();
             let day = now.getDay();
             let hour = now.getHours();
-            let isFriday = (day === 5 && hour >= 13);
+            let isFriday = (day === 5 && hour >= 16);
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
-            document.getElementById("icon").src = isFriday ? "Test.jpg" : "image.png";
+            document.getElementById("icon").src = isFriday ? "full_cart.png" : "empty_cart.png";
         }
         updateMessage();
         setInterval(updateMessage, 60000);
