@@ -36,10 +36,11 @@
     <div id="message"></div>
     <script>
         function updateMessage() {
-            let now = new Date();
+           let now = new Date();
             let day = now.getDay();
             let hour = now.getHours();
-            let isFriday = (day === 5 && hour >= 16);
+            let minute = now.getMinutes();
+            let isFriday = (day === 5 && hour === 15 && minute >= 30) || (day === 5 && hour > 15); // Starts at 15:30 on Friday
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
             document.getElementById("icon").src = isFriday ? "full_cart.jpg" : "empty_cart.png";
