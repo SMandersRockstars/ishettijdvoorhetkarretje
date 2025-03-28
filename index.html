@@ -90,12 +90,12 @@
 
              // Calculate remaining time until the next Friday 15:30
             let targetTime = new Date();
-            if (day === 6 && hour >= 15 && minute >= 30) {
+            if (day === 5 && hour >= 15 && minute >= 30) {
                 // If it's Friday after 15:30, calculate the time until the next Friday
                 targetTime.setDate(targetTime.getDate() + 7); // Set target to next Friday
             } else {
                 // If it's not yet Friday or before 15:30, calculate the time until this week's Friday at 15:30
-                let daysUntilFriday = (6 - day + 7) % 7;
+                let daysUntilFriday = (5 - day + 7) % 7;
                 targetTime.setDate(targetTime.getDate() + daysUntilFriday);
             }
             targetTime.setHours(15, 30, 0, 0); // Set target time to 15:30 on the target Friday
