@@ -19,7 +19,7 @@
             let now = new Date();
             let day = now.getDay();
             let hour = now.getHours();
-            let isFriday = (day === 5 && hour >= 16);
+            let isFriday = (day === 5 && hour >= 13);
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
             document.getElementById("icon").src = isFriday ? "/Test.jpg" : "/image.png";
