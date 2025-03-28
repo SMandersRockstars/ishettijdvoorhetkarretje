@@ -1,1 +1,28 @@
-<div>Test</div>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vrijdagmelding</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; font-size: 50px; margin-top: 20%; transition: background-color 0.5s; }
+        .yes { background-color: green; color: white; }
+        .no { background-color: red; color: white; }
+    </style>
+</head>
+<body>
+    <div id="message"></div>
+    <script>
+        function updateMessage() {
+            let now = new Date();
+            let day = now.getDay();
+            let hour = now.getHours();
+            let isFriday = (day === 6 && hour >= 13);
+            document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
+            document.body.className = isFriday ? "yes" : "no";
+        }
+        updateMessage();
+        setInterval(updateMessage, 60000);
+    </script>
+</body>
+</html>
