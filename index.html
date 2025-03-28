@@ -9,8 +9,9 @@
             font-family: Arial, sans-serif; 
             text-align: center; 
             font-size: 50px; 
-            margin-top: 10%; 
-            transition: background-color 0.5s; 
+            margin-top: 20%; 
+            transition: background-color 0.5s;
+            overflow: hidden; /* Ensures the video doesn't cause scrolling */
         }
         .yes { 
             background-color: green; 
@@ -21,7 +22,8 @@
             color: white; 
         }
         img { 
-            width: 300px; /* Increased size */
+            width: 150px; /* Increased size */
+            margin-top: 20px;
             border-radius: 15px; /* Rounded corners */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
             transition: transform 0.3s ease; /* Smooth scale effect */
@@ -29,21 +31,56 @@
         img:hover {
             transform: scale(1.1); /* Slight zoom on hover */
         }
+        /* Styling for the videos */
+        .video-container {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 20%; /* Adjust size to your preference */
+            z-index: -1; /* Send the videos behind other elements */
+        }
+        .video-left {
+            left: 0;
+        }
+        .video-right {
+            right: 0;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures video fills the container */
+        }
     </style>
 </head>
 <body>
-    <img id="icon" src="" alt="">
     <div id="message"></div>
+    <img id="icon" src="" alt="Winkelwagen">
+    
+    <!-- Video containers for both sides -->
+    <div class="video-container video-left">
+        <video autoplay loop muted>
+            <source src="subway-surfer-left.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <div class="video-container video-right">
+        <video autoplay loop muted>
+            <source src="subway-surfer-right.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
     <script>
         function updateMessage() {
-           let now = new Date();
+            let now = new Date();
             let day = now.getDay();
             let hour = now.getHours();
             let minute = now.getMinutes();
             let isFriday = (day === 5 && hour === 15 && minute >= 30) || (day === 5 && hour > 15); // Starts at 15:30 on Friday
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
-            document.getElementById("icon").src = isFriday ? "full_cart.jpg" : "empty_cart.png";
+            document.getElementById("icon").src = isFriday ? "full_cart.png" : "empty_cart.png";
         }
         updateMessage();
         setInterval(updateMessage, 60000);
