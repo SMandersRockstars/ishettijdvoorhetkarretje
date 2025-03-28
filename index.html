@@ -22,7 +22,7 @@
             let isFriday = (day === 5 && hour >= 16);
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
-            document.getElementById("icon").src = isFriday ? "full_cart.png" : "empty_cart.png";
+            document.getElementById("icon").src = isFriday ? "Test.jpg" : "image.png";
         }
         updateMessage();
         setInterval(updateMessage, 60000);
