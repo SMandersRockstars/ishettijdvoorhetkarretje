@@ -8,10 +8,12 @@
         body { font-family: Arial, sans-serif; text-align: center; font-size: 50px; margin-top: 20%; transition: background-color 0.5s; }
         .yes { background-color: green; color: white; }
         .no { background-color: red; color: white; }
+        img { width: 100px; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div id="message"></div>
+    <img id="icon" src="" alt="Winkelwagen">
     <script>
         function updateMessage() {
             let now = new Date();
@@ -20,6 +22,7 @@
             let isFriday = (day === 5 && hour >= 16);
             document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
             document.body.className = isFriday ? "yes" : "no";
+            document.getElementById("icon").src = isFriday ? "full_cart.png" : "empty_cart.png";
         }
         updateMessage();
         setInterval(updateMessage, 60000);
