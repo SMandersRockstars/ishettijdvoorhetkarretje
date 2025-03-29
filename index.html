@@ -1,119 +1,38 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vrijdagmelding</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            font-size: 50px; 
-            margin-top: 10%; 
-            transition: background-color 0.5s;
-            overflow: hidden; /* Ensures the video doesn't cause scrolling */
-        }
-        .yes { 
-            background-color: green; 
-            color: white; 
-        }
-        .no { 
-            background-color: red; 
-            color: white; 
-        }
-        img { 
-            width: 300px; /* Increased size */
-            margin-top: 20px;
-            border-radius: 15px; /* Rounded corners */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
-            transition: transform 0.3s ease; /* Smooth scale effect */
-        }
-        img:hover {
-            transform: scale(1.1); /* Slight zoom on hover */
-        }
-        /* Styling for the videos */
-        .video-container {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            width: 20%; /* Adjust size to your preference */
-            z-index: -1; /* Send the videos behind other elements */
-        }
-        .video-left {
-            left: 0;
-        }
-        .video-right {
-            right: 0;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ensures video fills the container */
-        }
-        #remaining-time {
-            font-size: 30px;
-            margin-top: 20px;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <img id="icon" src="" alt="">
-    <div id="message"></div>
-    <div id="remaining-time"></div>
-    
-    <!-- Video containers for both sides -->
-    <div class="video-container video-left">
-        <video autoplay loop muted>
-            <source src="youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-    
-    <div class="video-container video-right">
-        <video autoplay loop muted>
-            <source src="youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
+<script>
+    function updateMessage() {
+        let now = new Date();
+        let day = now.getDay();
+        let hour = now.getHours();
+        let minute = now.getMinutes();
 
-    <script>
-        function updateMessage() {
-            let now = new Date();
-            let day = now.getDay();
-            let hour = now.getHours();
-            let minute = now.getMinutes();
-            let isFriday = (day === 5 && (hour > 15 || (hour === 15 && minute >= 30)));
-            document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
-            document.body.className = isFriday ? "yes" : "no";
-            document.getElementById("icon").src = isFriday ? "full_cart.jpg" : "empty_cart.png";
+        // Check if it's Friday after 15:30 OR before 00:00 on Saturday
+        let isFriday = (day === 5 && (hour > 15 || (hour === 15 && minute >= 30))) || (day === 6 && hour < 0);
 
-             // Calculate remaining time until the next Friday 15:30
-            let targetTime = new Date();
-            if (day === 5 && hour >= 15 && minute >= 30) {
-                // If it's Friday after 15:30, calculate the time until the next Friday
-                targetTime.setDate(targetTime.getDate() + 7); // Set target to next Friday
-            } else {
-                // If it's not yet Friday or before 15:30, calculate the time until this week's Friday at 15:30
-                let daysUntilFriday = (5 - day + 7) % 7;
-                targetTime.setDate(targetTime.getDate() + daysUntilFriday);
+        document.getElementById("message").textContent = isFriday ? "JA" : "NEE";
+        document.body.className = isFriday ? "yes" : "no";
+        document.getElementById("icon").src = isFriday ? "full_cart.jpg" : "empty_cart.png";
+
+        let targetTime = new Date();
+        if (isFriday) {
+            // If it's Friday after 15:30 or before 00:00 on Saturday, display this message
+            document.getElementById("remaining-time").textContent = "HET IS TIJD VOOR HET KARRETJE!";
+        } else {
+            // Find the next Friday 15:30
+            let daysUntilFriday = (5 - day + 7) % 7;
+            if (day === 6) {
+                daysUntilFriday = 6; // If it's Saturday, next Friday is in 6 days
             }
-            targetTime.setHours(15, 30, 0, 0); // Set target time to 15:30 on the target Friday
+            targetTime.setDate(targetTime.getDate() + daysUntilFriday);
+            targetTime.setHours(15, 30, 0, 0);
 
             let remainingTime = targetTime - now;
+            let days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+            let hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
 
-            if (remainingTime > 0) {
-                let days = Math.floor(remainingTime / (1000 * 60 * 60 * 24)); // Calculate days
-                let hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); // Calculate hours
-                let minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60)); // Calculate minutes
-                document.getElementById("remaining-time").textContent = `Nog: ${days}d ${hours}h ${minutes}m voordat het tijd is voor het karretje`;
-            } else {
-                document.getElementById("remaining-time").textContent = "HET IS TIJD VOOR HET KARRETJE!";
-            }
-
+            document.getElementById("remaining-time").textContent = `Nog: ${days}d ${hours}h ${minutes}m voordat het tijd is voor het karretje`;
         }
-        updateMessage();
-        setInterval(updateMessage, 60000);
-    </script>
-</body>
-</html>
+    }
+    updateMessage();
+    setInterval(updateMessage, 60000);
+</script>
