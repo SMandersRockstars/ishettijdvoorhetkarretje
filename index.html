@@ -1,3 +1,236 @@
+<!DOCTYPE html>
+ 
+
+<html lang="nl">
+ 
+
+<head>
+ 
+
+    <meta charset="UTF-8">
+ 
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+
+    <title>Vrijdagmelding</title>
+ 
+
+    <style>
+ 
+
+        body { 
+ 
+
+            font-family: Arial, sans-serif; 
+ 
+
+            text-align: center; 
+ 
+
+            font-size: 50px; 
+ 
+
+            margin-top: 10%; 
+ 
+
+            transition: background-color 0.5s;
+ 
+
+            overflow: hidden; /* Ensures the video doesn't cause scrolling */
+ 
+
+        }
+ 
+
+        .yes { 
+ 
+
+            background-color: green; 
+ 
+
+            color: white; 
+ 
+
+        }
+ 
+
+        .no { 
+ 
+
+            background-color: red; 
+ 
+
+            color: white; 
+ 
+
+        }
+ 
+
+        img { 
+ 
+
+            width: 300px; /* Increased size */
+ 
+
+            margin-top: 20px;
+ 
+
+            border-radius: 15px; /* Rounded corners */
+ 
+
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
+ 
+
+            transition: transform 0.3s ease; /* Smooth scale effect */
+ 
+
+        }
+ 
+
+        img:hover {
+ 
+
+            transform: scale(1.1); /* Slight zoom on hover */
+ 
+
+        }
+ 
+
+        /* Styling for the videos */
+ 
+
+        .video-container {
+ 
+
+            position: fixed;
+ 
+
+            top: 0;
+ 
+
+            bottom: 0;
+ 
+
+            width: 20%; /* Adjust size to your preference */
+ 
+
+            z-index: -1; /* Send the videos behind other elements */
+ 
+
+        }
+ 
+
+        .video-left {
+ 
+
+            left: 0;
+ 
+
+        }
+ 
+
+        .video-right {
+ 
+
+            right: 0;
+ 
+
+        }
+ 
+
+        video {
+ 
+
+            width: 100%;
+ 
+
+            height: 100%;
+ 
+
+            object-fit: cover; /* Ensures video fills the container */
+ 
+
+        }
+ 
+
+        #remaining-time {
+ 
+
+            font-size: 30px;
+ 
+
+            margin-top: 20px;
+ 
+
+            color: white;
+ 
+
+        }
+ 
+
+    </style>
+ 
+
+</head>
+ 
+
+<body>
+ 
+
+    <img id="icon" src="" alt="">
+ 
+
+    <div id="message"></div>
+ 
+
+    <div id="remaining-time"></div>
+ 
+
+    
+ 
+
+    <!-- Video containers for both sides -->
+ 
+
+    <div class="video-container video-left">
+ 
+
+        <video autoplay loop muted>
+ 
+
+            <source src="youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
+ 
+
+            Your browser does not support the video tag.
+ 
+
+        </video>
+ 
+
+    </div>
+ 
+
+    
+ 
+
+    <div class="video-container video-right">
+ 
+
+        <video autoplay loop muted>
+ 
+
+            <source src="youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
+ 
+
+            Your browser does not support the video tag.
+ 
+
+        </video>
+ 
+
+    </div>
+
 <script>
     function updateMessage() {
         let now = new Date();
