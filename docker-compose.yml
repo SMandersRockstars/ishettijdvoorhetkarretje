@@ -1,7 +1,8 @@
 version: '3'
 services:
-  web:
+  tijdvoordekar:
     build: .
+    container_name: tijdvoordekar
     ports:
       - "6969:80"
     volumes:
