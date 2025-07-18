@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file dcoker --tag tijd_voor_de_kar:$(date +%s)
+      run: docker build . --file dockerfile --tag tijd_voor_de_kar:$(date +%s)
