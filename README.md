@@ -2,6 +2,13 @@
 
 Welkom bij deze GitHub-repository!
 
+## Feedback en bijdragen!!
+
+Heb je ideeën voor verbeteringen, nieuwe functionaliteiten, of wil je gewoon meedenken over het karretje?  
+Maak dan gerust een **Issue** aan! Zo kunnen we samen sparren over mogelijke implementaties en deze legendarische tool nóg beter maken.
+
+Pull requests zijn ook welkom — maar overleg via een Issue wordt aangemoedigd als startpunt voor discussie 💬
+
 ## Doel van deze repository
 
 Deze repository wordt gebruikt om bij te houden wanneer het **tijd is voor het karretje**.  
@@ -13,11 +20,5 @@ Oftewel: een handige manier om te registreren, herinneren of automatiseren wanne
 - Scripts of tools om meldingen te sturen
 - Notities of ideeën rondom het concept "het karretje"
 - Experimentele code om het karretje automatisch te detecteren 👀
-
-## Waarom?
-
-Omdat het karretje een serieuze zaak is. En serieuze zaken verdienen versiebeheer.
-
----
 
 Blijf rollen, blijf bouwen – en vergeet het karretje niet.
