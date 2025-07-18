@@ -5,7 +5,7 @@ Welkom bij deze GitHub-repository!
 ## Feedback en bijdragen!!
 
 Heb je ideeën voor verbeteringen, nieuwe functionaliteiten, of wil je gewoon meedenken over het karretje?  
-Maak dan gerust een **Issue** aan! Zo kunnen we samen sparren over mogelijke implementaties en deze legendarische tool nóg beter maken.
+Maak dan gerust een nieuw **Issue** aan! Zo kunnen we samen sparren over mogelijke implementaties en deze legendarische tool nóg beter maken.
 
 Pull requests zijn ook welkom — maar overleg via een Issue wordt aangemoedigd als startpunt voor discussie 💬
 
