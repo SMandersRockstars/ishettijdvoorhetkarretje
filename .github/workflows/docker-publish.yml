@@ -21,5 +21,4 @@ jobs:
     - name: Build the tijdvoorhetkarretje Docker image
       run: |
         docker build . --tag ghcr.io/smandersrockstars/ishettijdvoorhetkarretje-web:latest
-        docker run ghcr.io/smandersrockstars/ishettijdvoorhetkarretje-web:latest
         docker push ghcr.io/smandersrockstars/ishettijdvoorhetkarretje-web:latest
