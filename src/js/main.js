@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
             message: document.getElementById('message'),
             content: document.getElementById('content'),
             icon: document.getElementById('icon'),
-            remainingTime: document.getElementById('remaining-time')
+            remainingTime: document.getElementById('remaining-time'),
+            waitingContent: document.getElementById('waiting-content')
         },
 
         updateDisplay(state) {
@@ -14,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.elements.content.className = `content ${state.isPartyTime ? 'yes' : 'no'}`;
             this.elements.icon.src = state.iconSrc;
             this.elements.remainingTime.textContent = state.remainingTime;
+            
+            // Show/hide waiting content based on party time
+            if (this.elements.waitingContent) {
+                this.elements.waitingContent.style.display = state.isPartyTime ? 'none' : 'block';
+            }
         },
 
         initialize() {
