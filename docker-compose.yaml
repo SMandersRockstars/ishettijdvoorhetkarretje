@@ -1,4 +1,3 @@
-version: '3'
 services:
   tijdvoordekar:
     build: .
@@ -6,4 +5,4 @@ services:
     ports:
       - "6969:80"
     volumes:
-      - .:/usr/share/nginx/html
+      - ./src:/usr/share/nginx/html
