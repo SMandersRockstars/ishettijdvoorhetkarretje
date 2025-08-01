@@ -80,50 +80,28 @@ video {
 
 /* Waiting content styles */
 #waiting-content {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-#waiting-content h3 {
-    margin: 0 0 10px 0;
-    color: #fff;
-    font-size: 1.2em;
+    margin-top: 15px;
+    text-align: center;
 }
 
 #waiting-content p {
-    margin: 0 0 15px 0;
+    margin: 0 0 10px 0;
     color: #ccc;
-    font-size: 0.8em;
+    font-size: 0.7em;
 }
 
 .game-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+    display: inline-block;
     text-decoration: none;
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #999;
+    font-size: 0.6em;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+    border: 1px solid #666;
 }
 
 .game-link:hover {
-    background-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.game-link img {
-    width: 40px;
-    height: auto;
-}
-
-.game-link span {
-    font-size: 0.9em;
-    font-weight: bold;
+    color: #fff;
+    border-color: #999;
 } 
