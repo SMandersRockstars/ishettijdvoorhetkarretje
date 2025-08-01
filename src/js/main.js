@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
             message: document.getElementById('message'),
             content: document.getElementById('content'),
             icon: document.getElementById('icon'),
-            remainingTime: document.getElementById('remaining-time')
+            remainingTime: document.getElementById('remaining-time'),
+            beerDrinkingGif: document.getElementById('beer-drinking-gif')
         },
 
         updateDisplay(state) {
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.elements.content.className = `content ${state.isPartyTime ? 'yes' : 'no'}`;
             this.elements.icon.src = state.iconSrc;
             this.elements.remainingTime.textContent = state.remainingTime;
+            this.elements.beerDrinkingGif.style.display = state.isPartyTime ? 'block' : 'none';
         },
 
         initialize() {
