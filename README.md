@@ -2,6 +2,46 @@
 
 Welkom bij deze GitHub-repository!
 
+## 🚀 Enterprise-Grade Refactoring Complete!
+
+We've successfully refactored the codebase into a clean, maintainable structure while keeping it simple with plain HTML, CSS, and JavaScript.
+
+### 📁 New Project Structure
+
+```
+src/
+├── index.html          # Main HTML file
+├── styles/
+│   └── main.css        # All styles separated
+├── js/
+│   ├── timeManager.js  # Time calculations and state management
+│   ├── coinCursor.js   # Interactive coin effects
+│   └── main.js         # Application initialization
+└── assets/             # All images and videos
+```
+
+### 🛠️ Development
+
+**Local Development:**
+```bash
+node serve.js
+```
+Then visit `http://localhost:3000`
+
+**Docker Development:**
+```bash
+docker-compose up --build
+```
+Then visit `http://localhost:6969`
+
+### ✨ Improvements Made
+
+- **Modular JavaScript**: Separated concerns into focused modules
+- **Clean CSS**: All styles in dedicated file
+- **Better Organization**: Logical file structure
+- **Maintainable Code**: Easy to understand and modify
+- **Development Server**: Simple local development setup
+
 ## Feedback en bijdragen!!
 
 Heb je ideeën voor verbeteringen, nieuwe functionaliteiten, of wil je gewoon meedenken over het karretje?  
@@ -12,7 +52,7 @@ Pull requests zijn ook welkom — maar overleg via een Issue wordt aangemoedigd 
 ## Doel van deze repository
 
 Deze repository wordt gebruikt om bij te houden wanneer het **tijd is voor het karretje**.  
-Oftewel: een handige manier om te registreren, herinneren of automatiseren wanneer we weer kunnen gaan 🛒, 🍻, 🥳, of wat jouw definitie van “het karretje” ook is.
+Oftewel: een handige manier om te registreren, herinneren of automatiseren wanneer we weer kunnen gaan 🛒, 🍻, 🥳, of wat jouw definitie van "het karretje" ook is.
 
 ## Wat je hier kunt vinden
 

@@ -1,7 +1,7 @@
 FROM nginx:alpine
 
-# Copy the contents of the current directory to the Nginx default HTML directory
-COPY . /usr/share/nginx/html
+# Copy the src directory to the Nginx default HTML directory
+COPY src/ /usr/share/nginx/html/
 
 # Expose port 80 for HTTP traffic
 EXPOSE 80
