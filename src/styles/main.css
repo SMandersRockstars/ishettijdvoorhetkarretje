@@ -1,0 +1,79 @@
+body {
+    display: flex;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    background-color: black;
+    height: 100vh;
+    font-size: 2em;
+}
+
+.yes {
+    background-color: green;
+}
+
+.no {
+    background-color: red;
+}
+
+img {
+    width: 100px;
+    height: auto;
+}
+
+.side {
+    width: 20%;
+    height: 100%;
+}
+
+video {
+    width: 100%;
+    object-fit: fill;
+    height: 100%;
+    position: relative;
+}
+
+.fish {
+    height: 20%;
+}
+
+.center {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    width: 60%;
+    height: 100vh;
+    vertical-align: top;
+    z-index: 10;
+}
+
+.content {
+    padding: 20px;
+    height: 60%;
+}
+
+.icon {
+    border-radius: 10%;
+    width: 5em;
+    margin-bottom: 1em;
+}
+
+.coin {
+    position: absolute;
+    pointer-events: none;
+    width: 30px;
+    height: 30px;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 1s;
+}
+
+.party-coin {
+    position: absolute;
+    pointer-events: none;
+    width: 70px;
+    height: 100px;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 1s;
+} 
