@@ -76,4 +76,54 @@ video {
     z-index: 9999;
     opacity: 1;
     transition: opacity 1s;
+}
+
+/* Waiting content styles */
+#waiting-content {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+#waiting-content h3 {
+    margin: 0 0 10px 0;
+    color: #fff;
+    font-size: 1.2em;
+}
+
+#waiting-content p {
+    margin: 0 0 15px 0;
+    color: #ccc;
+    font-size: 0.8em;
+}
+
+.game-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.game-link:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.game-link img {
+    width: 40px;
+    height: auto;
+}
+
+.game-link span {
+    font-size: 0.9em;
+    font-weight: bold;
 } 
