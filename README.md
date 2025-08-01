@@ -64,4 +64,4 @@ Oftewel: een handige manier om te registreren, herinneren of automatiseren wanne
 Blijf rollen, blijf bouwen – en vergeet het karretje niet.
 
 Wacht niet langer in spanning en klik     
-## →→→→→  [HIER](https://www.ishettijdvoorhetkarretje.nl/)  ←←←←←
+## →→→→→  [HIER](https://ishettijdvoorhetkarretje.nl/)  ←←←←←
