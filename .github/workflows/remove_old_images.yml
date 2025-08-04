@@ -4,6 +4,9 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Delete All Untagged Versions
         uses: actions/delete-package-versions@v5
