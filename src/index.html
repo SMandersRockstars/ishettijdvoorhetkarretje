@@ -77,10 +77,80 @@
         ]
     }
     </script>
-    
+    <script>
+        function init() {
+            // Insert new video of fish with music enabled
+            const html = `
+                <video loop>
+                    <source src="assets/fish.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>`
+
+            // Create new hidden div element and insert html
+            const div = document.createElement('div');
+            div.style.display = 'none';
+            div.innerHTML = html;
+            document.body.appendChild(div);
+
+            const video = div.querySelector('video');
+            video.muted = false;
+            video.autoplay = true;
+            video.play();
+
+            const button = document.querySelector('.annoying-button');
+
+            // Remove button element
+            button.remove();
+
+            // Add new gif fixed to the bottom left corner
+            const gif = document.createElement('img');
+            gif.src = 'assets/cat.gif';
+
+            gif.style.position = 'fixed';
+            gif.style.bottom = `0px`;
+            gif.style.left = '0px';
+            gif.style.width = document.body.clientWidth * 0.2 + 'px';
+            gif.style.height = document.body.clientHeight * 0.2 + 'px';
+            gif.style.zIndex = '1000';
+            document.body.appendChild(gif);
+
+        }
+
+        addEventListener('mousemove', (e) => {
+            // Move annoying-button to mouse location with transform
+            const button = document.querySelector('.annoying-button');
+
+            if (!button) {
+                return;
+            }
+
+            const top = e.clientY - button.clientHeight / 2;
+            const left = e.clientX - button.clientWidth / 2;
+
+            button.style.top = `${top}px`;
+            button.style.left = `${left}px`;
+        })
+
+    </script>
+    <style>
+        .annoying-button {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background-color: greenyellow;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
+    <button class="annoying-button" style="font-size: 2em" onclick="init()">Klik hier voor de volledige ervaring</button>
     <div class="side">
         <video autoplay loop muted>
             <source src="assets/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
