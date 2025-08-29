@@ -78,6 +78,42 @@ video {
     transition: opacity 1s;
 }
 
+/* Waiting content styles */
+#waiting-content {
+    margin-top: 15px;
+    text-align: center;
+}
+
+#waiting-content p {
+    margin: 0 0 10px 0;
+    color: #ccc;
+    font-size: 0.7em;
+}
+
+.game-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    height: 200px;
+}
+
+.game-link:hover {
+    color: #fff;
+    border-color: #999;
+}
+
+.game-link img {
+    width: 150px;
+    height: auto;
+    opacity: 0.7;
+}
+
+.game-link:hover img {
+    opacity: 1;
+}
+
 /* Beer drinking GIF styles */
 #beer-drinking-gif {
     max-width: 90vw;
@@ -106,4 +142,4 @@ video {
         height: 300px;
         object-fit: contain;
     }
-} 
+}
