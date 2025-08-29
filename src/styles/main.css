@@ -112,4 +112,34 @@ video {
 
 .game-link:hover img {
     opacity: 1;
-} 
+}
+
+/* Beer drinking GIF styles */
+#beer-drinking-gif {
+    max-width: 90vw;
+    height: auto;
+}
+
+/* Media queries for beer drinking GIF to maximize at 300px when filling background */
+@media (min-width: 334px) {
+    #beer-drinking-gif {
+        max-width: 300px;
+        max-height: 300px;
+    }
+}
+
+@media (min-height: 334px) {
+    #beer-drinking-gif {
+        max-width: 300px;
+        max-height: 300px;
+    }
+}
+
+/* For larger screens, ensure it doesn't exceed 300px */
+@media (min-width: 768px) and (min-height: 600px) {
+    #beer-drinking-gif {
+        width: 300px;
+        height: 300px;
+        object-fit: contain;
+    }
+}
