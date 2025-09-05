@@ -12,19 +12,19 @@ class FestivityManager {
                     'assets/spooktober-mode/skull-coin.png'
                 ],
                 gifs: {
-                    beer: 'assets/spooktober-mode/halloween-beer.gif',
-                    cat: 'assets/spooktober-mode/halloween-cat.gif',
-                    fish: 'assets/spooktober-mode/halloween-fish.mp4'
+                    beer: 'assets/default-mode/beer-drinking.gif',
+                    cat: 'assets/default-mode/cat.gif',
+                    fish: 'assets/default-mode/fish.mp4'
                 },
                 videos: {
-                    subway: 'assets/spooktober-mode/halloween-subway.mp4',
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
                     init: 'assets/spooktober-mode/halloween-init.mp4'
                 },
                 partyImages: [
-                    'assets/spooktober-mode/halloween-heineken.png',
-                    'assets/spooktober-mode/halloween-hertog.png',
-                    'assets/spooktober-mode/halloween-lays.png',
-                    'assets/spooktober-mode/halloween-boonekamp.png'
+                    'assets/default-mode/heineken.png',
+                    'assets/default-mode/hertog_jan.png',
+                    'assets/default-mode/lays.png',
+                    'assets/default-mode/boonekamp.png'
                 ],
                 icon: 'assets/spooktober-mode/halloween-cart.png',
                 fullCart: 'assets/spooktober-mode/halloween-full-cart.png',
