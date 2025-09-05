@@ -4,7 +4,7 @@ class FestivityManager {
         this.themes = {
             halloween: {
                 name: 'Halloween',
-                months: [9, 10], // October
+                months: [10], // October
                 coinImages: [
                     'assets/spooktober-mode/pumpkin-coin.png',
                     'assets/spooktober-mode/ghost-coin.png',
