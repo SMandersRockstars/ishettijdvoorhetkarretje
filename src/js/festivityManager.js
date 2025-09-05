@@ -148,9 +148,6 @@ class FestivityManager {
         
         // Update gifs and videos
         this.updateMediaElements();
-        
-        // Force update all videos
-        this.updateAllVideos();
     }
 
     updateMediaElements() {
@@ -176,9 +173,7 @@ class FestivityManager {
         
         // Update subway surfers videos (side panels)
         const subwayVideos = document.querySelectorAll('.side video source');
-        console.log('Found subway videos:', subwayVideos.length);
         subwayVideos.forEach(video => {
-            console.log('Updating subway video from:', video.src, 'to:', theme.videos.subway);
             this.updateVideoWithFallback(video, theme.videos.subway, 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4');
         });
         
@@ -278,36 +273,6 @@ class FestivityManager {
         return this.currentTheme;
     }
 
-    // Get the appropriate theme based on month and toggle state
-    getAppropriateTheme() {
-        const monthTheme = this.detectCurrentTheme();
-        return this.isSpecialMonth() ? monthTheme : 'default';
-    }
-
-    // Force update all videos on the page
-    updateAllVideos() {
-        const theme = this.getCurrentTheme();
-        
-        // Update all video sources
-        const allVideos = document.querySelectorAll('video');
-        allVideos.forEach(video => {
-            const source = video.querySelector('source');
-            if (source) {
-                // Determine what type of video this is based on current src
-                let newSrc = source.src;
-                if (source.src.includes('youtube_RbVMiu4ubT0') || source.src.includes('subway')) {
-                    newSrc = theme.videos.subway;
-                } else if (source.src.includes('fish.mp4') || source.src.includes('init')) {
-                    newSrc = theme.gifs.fish;
-                }
-                
-                if (newSrc !== source.src) {
-                    console.log('Updating video from:', source.src, 'to:', newSrc);
-                    this.updateVideoWithFallback(source, newSrc, 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4');
-                }
-            }
-        });
-    }
 
     // Hide main init video when switching themes (if it exists)
     hideMainInitVideo() {

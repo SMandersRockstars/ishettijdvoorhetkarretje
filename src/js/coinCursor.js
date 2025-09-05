@@ -174,11 +174,6 @@ class CoinCursor {
         this.preloadImages();
     }
 
-    // Clean up all coins (useful for theme changes)
-    cleanupAllCoins() {
-        const coins = document.querySelectorAll('.coin, .party-coin');
-        coins.forEach(coin => this.removeCoin(coin));
-    }
 }
 
 // Create global instance

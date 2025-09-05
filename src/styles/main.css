@@ -155,11 +155,6 @@ video {
     font-weight: bold;
 }
 
-/* Main init video - let inline styles handle sizing */
-#main-init-video {
-    /* No CSS sizing - let JavaScript handle it dynamically */
-}
-
 /* Halloween Theme Styles */
 .halloween-theme {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
