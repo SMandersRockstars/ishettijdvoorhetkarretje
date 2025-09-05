@@ -32,6 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Initialize and apply festivity theme first
+    if (window.festivityManager) {
+        // Auto-apply theme based on current month
+        const monthTheme = window.festivityManager.detectCurrentTheme();
+        window.festivityManager.setTheme(monthTheme);
+    }
+    
     // Initialize components
     timeDisplay.initialize();
     window.coinCursor.initialize();
