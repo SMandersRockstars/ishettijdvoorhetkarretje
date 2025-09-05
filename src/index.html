@@ -79,23 +79,52 @@
     </script>
     <script>
         function init() {
-            // Insert new video of fish with music enabled
-            const html = `
-                <video loop>
-                    <source src="assets/fish.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>`
+            // Get themed video from festivity manager
+            const videoSrc = window.festivityManager ? window.festivityManager.getVideo('init') : 'assets/default-mode/fish.mp4';
+            
+            // Check if we're in festive mode
+            const isFestiveMode = window.festivityManager && window.festivityManager.getCurrentTheme().name !== 'Default';
+            
+            if (isFestiveMode) {
+                // In festive mode: show video in bottom right corner with sound
+                const html = `
+                    <video loop id="main-init-video">
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>`
 
-            // Create new hidden div element and insert html
-            const div = document.createElement('div');
-            div.style.display = 'none';
-            div.innerHTML = html;
-            document.body.appendChild(div);
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                document.body.appendChild(div);
 
-            const video = div.querySelector('video');
-            video.muted = false;
-            video.autoplay = true;
-            video.play();
+                const video = div.querySelector('video');
+                video.muted = false;
+                video.autoplay = true;
+                video.style.position = 'fixed';
+                video.style.bottom = '0px';
+                video.style.right = '0px';
+                video.style.zIndex = '1000';
+                video.style.width = document.body.clientWidth * 0.2 + 'px';
+                video.style.height = document.body.clientHeight * 0.2 + 'px';
+                video.play();
+            } else {
+                // In default mode: keep original hidden behavior
+                const html = `
+                    <video loop>
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>`
+
+                const div = document.createElement('div');
+                div.style.display = 'none';
+                div.innerHTML = html;
+                document.body.appendChild(div);
+
+                const video = div.querySelector('video');
+                video.muted = false;
+                video.autoplay = true;
+                video.play();
+            }
 
             const button = document.querySelector('.annoying-button');
 
@@ -104,7 +133,7 @@
 
             // Add new gif fixed to the bottom left corner
             const gif = document.createElement('img');
-            gif.src = 'assets/cat.gif';
+            gif.src = 'assets/default-mode/cat.gif';
 
             gif.style.position = 'fixed';
             gif.style.bottom = `0px`;
@@ -131,6 +160,46 @@
             button.style.left = `${left}px`;
         })
 
+
+        // Toggle festive theme function
+        function toggleFestiveTheme() {
+            if (window.festivityManager) {
+                const newTheme = window.festivityManager.toggleTheme();
+                
+                // Update button visibility based on current theme
+                updateToggleButtonVisibility();
+            } else {
+                console.error('Festivity manager not available');
+            }
+        }
+        
+        // Update toggle button visibility
+        function updateToggleButtonVisibility() {
+            const themeTesting = document.getElementById('theme-testing');
+            if (themeTesting && window.festivityManager) {
+                const currentTheme = window.festivityManager.getCurrentTheme();
+                // Show button if we're in a special month OR if we're currently in a festive theme
+                if (window.festivityManager.isSpecialMonth() || currentTheme.name !== 'Default') {
+                    themeTesting.style.display = 'block';
+                } else {
+                    themeTesting.style.display = 'none';
+                }
+            }
+        }
+
+        // Show toggle festive button only when festive mode is available
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeTesting = document.getElementById('theme-testing');
+            if (themeTesting && window.festivityManager) {
+                // Only show if we're in a special month (festive mode available)
+                if (window.festivityManager.isSpecialMonth()) {
+                    themeTesting.style.display = 'block';
+                } else {
+                    themeTesting.style.display = 'none';
+                }
+            }
+        });
+
     </script>
     <style>
         .annoying-button {
@@ -151,9 +220,30 @@
 </head>
 <body>
     <button class="annoying-button" style="font-size: 2em" onclick="init()">Klik hier voor de volledige ervaring</button>
+    
+    <!-- Toggle Festive Mode Button -->
+    <div id="theme-testing" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: none;">
+        <button id="toggle-festive-btn" onclick="toggleFestiveTheme()" style="
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 53, 0.6)'" 
+           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 53, 0.4)'">
+            🎉 Toggle Festive Mode
+        </button>
+    </div>
     <div class="side">
         <video autoplay loop muted>
-            <source src="assets/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
+            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
@@ -161,29 +251,29 @@
     <div class="center">
         <div class="fish">
             <video autoplay loop muted>
-                <source src="assets/fish.mp4" type="video/mp4">
+                <source src="assets/default-mode/fish.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
         
         <div class="content" id="content">
-            <img class="icon" id="icon" src="assets/empty_cart.png" alt="Cart Icon">
+            <img class="icon" id="icon" src="assets/default-mode/empty_cart.png" alt="Cart Icon">
             <div id="message" class="message"></div>
             <p id="remaining-time"></p>
-            <img id="beer-drinking-gif" src="assets/beer-drinking.gif" alt="Beer drinking animation" style="position: relative; display: block; margin: 0 auto;">
+            <img id="beer-drinking-gif" src="assets/default-mode/beer-drinking.gif" alt="Beer drinking animation" style="position: relative; display: block; margin: 0 auto;">
 
             <!-- Game link - only visible when NOT party time -->
             <div id="waiting-content" style="display: none;">
                 <p>Speel Karretje the game!!!!! terwijl je wacht tot het vrijdag 15:30 is!</p>
                 <a href="./karretje-the-game.html" class="game-link">
-                    <img src="assets/kar.png" alt="Karretje">
+                    <img src="assets/kar.png" alt="Karretje" class="">
                 </a>
             </div>
         </div>
         
         <div class="fish">
             <video autoplay loop muted>
-                <source src="assets/fish.mp4" type="video/mp4">
+                <source src="assets/default-mode/fish.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
@@ -191,12 +281,13 @@
     
     <div class="side">
         <video autoplay loop muted>
-            <source src="assets/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
+            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
     <script src="js/timeManager.js"></script>
+    <script src="js/festivityManager.js?v=17"></script>
     <script src="js/coinCursor.js"></script>
     <script src="js/main.js"></script>
 </body>

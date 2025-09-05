@@ -57,7 +57,7 @@ class TimeManager {
             isPartyTime: isParty,
             message: isParty ? "JA" : "NEE",
             remainingTime: remainingTimeText,
-            iconSrc: isParty ? "assets/full_cart.jpg" : "assets/empty_cart.png"
+            iconSrc: isParty ? (window.festivityManager ? window.festivityManager.getFullCartImage() : "assets/default-mode/full_cart.jpg") : (window.festivityManager ? window.festivityManager.getIcon() : "assets/default-mode/empty_cart.png")
         };
     }
 

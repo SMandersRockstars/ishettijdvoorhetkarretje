@@ -54,7 +54,7 @@ video {
 
 .icon {
     border-radius: 10%;
-    width: 5em;
+    width: 8em;
     margin-bottom: 1em;
 }
 
@@ -96,7 +96,6 @@ video {
     gap: 6px;
     text-decoration: none;
     transition: all 0.2s ease;
-    height: 200px;
 }
 
 .game-link:hover {
@@ -105,7 +104,7 @@ video {
 }
 
 .game-link img {
-    width: 150px;
+    width: 100px;
     height: auto;
     opacity: 0.7;
 }
@@ -142,4 +141,92 @@ video {
         height: 300px;
         object-fit: contain;
     }
+}
+
+/* Remaining time text styles */
+#remaining-time {
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+/* Darker text when it's party time */
+.content.yes #remaining-time {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Halloween Theme Styles */
+.halloween-theme {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #ff6b35;
+}
+
+.halloween-theme .yes {
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    box-shadow: 0 0 20px #ff6b35;
+}
+
+.halloween-theme .no {
+    background: linear-gradient(45deg, #8b0000, #dc143c);
+    box-shadow: 0 0 20px #dc143c;
+}
+
+.halloween-theme .coin {
+    filter: drop-shadow(0 0 5px #ff6b35);
+}
+
+.halloween-theme .party-coin {
+    filter: drop-shadow(0 0 8px #ff6b35);
+}
+
+.halloween-theme .icon {
+    filter: drop-shadow(0 0 10px #ff6b35);
+}
+
+.halloween-theme .message {
+    text-shadow: 2px 2px 4px #000;
+    font-weight: bold;
+}
+
+.halloween-theme #waiting-content p {
+    color: #ff6b35;
+    text-shadow: 1px 1px 2px #000;
+}
+
+/* Christmas Theme Styles */
+.christmas-theme {
+    background: linear-gradient(135deg, #0f4c75 0%, #3282b8 50%, #bbe1fa 100%);
+    color: #ffd700;
+}
+
+.christmas-theme .yes {
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    box-shadow: 0 0 20px #ffd700;
+}
+
+.christmas-theme .no {
+    background: linear-gradient(45deg, #dc143c, #ff6b6b);
+    box-shadow: 0 0 20px #dc143c;
+}
+
+.christmas-theme .coin {
+    filter: drop-shadow(0 0 5px #ffd700);
+}
+
+.christmas-theme .party-coin {
+    filter: drop-shadow(0 0 8px #ffd700);
+}
+
+.christmas-theme .icon {
+    filter: drop-shadow(0 0 10px #ffd700);
+}
+
+.christmas-theme .message {
+    text-shadow: 2px 2px 4px #000;
+    font-weight: bold;
+}
+
+.christmas-theme #waiting-content p {
+    color: #ffd700;
+    text-shadow: 1px 1px 2px #000;
 }
