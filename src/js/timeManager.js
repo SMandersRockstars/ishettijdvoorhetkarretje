@@ -11,8 +11,7 @@ class TimeManager {
         const minute = now.getMinutes();
 
         // Check if it's Friday after 15:30 OR before 00:00 on Saturday
-        return (day === 5 && (hour > 15 || (hour === 15 && minute >= 30))) || 
-               (day === 6 && hour < 0);
+        return (day === 5 && hour > 15 || (day === 6 && hour < 0);
     }
 
     getNextPartyTime() {
