@@ -10,7 +10,7 @@ class TimeManager {
         const hour = now.getHours();
         const minute = now.getMinutes();
 
-        // Check if it's Friday after 15:30 OR before 00:00 on Saturday
+        // Check if it's Friday after 16:00 OR before 00:00 on Saturday
         return (day === 5 && hour > 15) || (day === 6 && hour < 0);
     }
 
@@ -22,7 +22,7 @@ class TimeManager {
             return targetTime;
         }
 
-        // Find the next Friday 15:30
+        // Find the next Friday 16:00
         const day = now.getDay();
         let daysUntilFriday = (5 - day + 7) % 7;
         
