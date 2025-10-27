@@ -1,6 +1,9 @@
 // Festivity Manager - Handles seasonal themes and special month decorations
 class FestivityManager {
     constructor() {
+        // Cache DOM element references for better performance
+        this.cachedElements = null;
+
         this.themes = {
             halloween: {
                 name: 'Halloween',
@@ -134,55 +137,65 @@ class FestivityManager {
         return this.getCurrentTheme().cssClass;
     }
 
+    cacheElements() {
+        if (!this.cachedElements) {
+            this.cachedElements = {
+                beerGif: document.getElementById('beer-drinking-gif'),
+                catGif: document.querySelector('img[src*="cat.gif"]'),
+                fishVideos: document.querySelectorAll('video source[src*="fish.mp4"]'),
+                subwayVideos: document.querySelectorAll('.side video source'),
+                cartIcon: document.getElementById('icon'),
+                mainInitVideo: document.getElementById('main-init-video')
+            };
+        }
+        return this.cachedElements;
+    }
+
     applyTheme() {
         // Remove existing theme classes
         document.body.classList.remove('halloween-theme', 'christmas-theme', 'default-theme');
-        
+
         // Add current theme class
         document.body.classList.add(this.getCssClass());
-        
+
         // Update coin cursor images
         if (window.coinCursor) {
             window.coinCursor.updateImages();
         }
-        
+
         // Update gifs and videos
         this.updateMediaElements();
     }
 
     updateMediaElements() {
         const theme = this.getCurrentTheme();
-        
+        const elements = this.cacheElements();
+
         // Update beer drinking gif
-        const beerGif = document.getElementById('beer-drinking-gif');
-        if (beerGif) {
-            this.updateImageWithFallback(beerGif, theme.gifs.beer, 'assets/default-mode/beer-drinking.gif');
+        if (elements.beerGif) {
+            this.updateImageWithFallback(elements.beerGif, theme.gifs.beer, 'assets/default-mode/beer-drinking.gif');
         }
-        
+
         // Update cat gif (if it exists)
-        const catGif = document.querySelector('img[src*="cat.gif"]');
-        if (catGif) {
-            this.updateImageWithFallback(catGif, theme.gifs.cat, 'assets/default-mode/cat.gif');
+        if (elements.catGif) {
+            this.updateImageWithFallback(elements.catGif, theme.gifs.cat, 'assets/default-mode/cat.gif');
         }
-        
+
         // Update fish videos
-        const fishVideos = document.querySelectorAll('video source[src*="fish.mp4"]');
-        fishVideos.forEach(video => {
+        elements.fishVideos.forEach(video => {
             this.updateVideoWithFallback(video, theme.gifs.fish, 'assets/default-mode/fish.mp4');
         });
-        
+
         // Update subway surfers videos (side panels)
-        const subwayVideos = document.querySelectorAll('.side video source');
-        subwayVideos.forEach(video => {
+        elements.subwayVideos.forEach(video => {
             this.updateVideoWithFallback(video, theme.videos.subway, 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4');
         });
-        
+
         // Update cart icon
-        const cartIcon = document.getElementById('icon');
-        if (cartIcon && !window.timeManager.isPartyTime()) {
-            this.updateImageWithFallback(cartIcon, theme.icon, 'assets/default-mode/empty_cart.png');
+        if (elements.cartIcon && !window.timeManager.isPartyTime()) {
+            this.updateImageWithFallback(elements.cartIcon, theme.icon, 'assets/default-mode/empty_cart.png');
         }
-        
+
         // Don't show festive init video automatically - only after init button click
     }
 
@@ -276,9 +289,11 @@ class FestivityManager {
 
     // Hide main init video when switching themes (if it exists)
     hideMainInitVideo() {
-        const mainVideo = document.getElementById('main-init-video');
-        if (mainVideo) {
-            mainVideo.remove();
+        const elements = this.cacheElements();
+        if (elements.mainInitVideo) {
+            elements.mainInitVideo.remove();
+            // Clear cache after removal
+            this.cachedElements.mainInitVideo = null;
         }
     }
 }

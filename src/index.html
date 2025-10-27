@@ -145,19 +145,26 @@
 
         }
 
+        // Optimized mousemove with RAF batching and element caching
+        const annoyingButton = document.querySelector('.annoying-button');
+        let mousePos = { x: 0, y: 0 };
+        let rafPending = false;
+
         addEventListener('mousemove', (e) => {
-            // Move annoying-button to mouse location with transform
-            const button = document.querySelector('.annoying-button');
+            mousePos.x = e.clientX;
+            mousePos.y = e.clientY;
 
-            if (!button) {
-                return;
+            if (!rafPending && annoyingButton) {
+                rafPending = true;
+                requestAnimationFrame(() => {
+                    const top = mousePos.y - annoyingButton.clientHeight / 2;
+                    const left = mousePos.x - annoyingButton.clientWidth / 2;
+
+                    // Use transform for better performance
+                    annoyingButton.style.transform = `translate(${left}px, ${top}px)`;
+                    rafPending = false;
+                });
             }
-
-            const top = e.clientY - button.clientHeight / 2;
-            const left = e.clientX - button.clientWidth / 2;
-
-            button.style.top = `${top}px`;
-            button.style.left = `${left}px`;
         })
 
 
@@ -223,34 +230,20 @@
     
     <!-- Toggle Festive Mode Button -->
     <div id="theme-testing" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: none;">
-        <button id="toggle-festive-btn" onclick="toggleFestiveTheme()" style="
-            background: linear-gradient(45deg, #ff6b35, #f7931e);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 53, 0.6)'" 
-           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 53, 0.4)'">
+        <button id="toggle-festive-btn" onclick="toggleFestiveTheme()" class="toggle-festive-btn">
             🎉 Toggle Festive Mode
         </button>
     </div>
     <div class="side">
-        <video autoplay loop muted>
+        <video autoplay loop muted playsinline preload="metadata" class="lazy-video">
             <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
-    
+
     <div class="center">
         <div class="fish">
-            <video autoplay loop muted>
+            <video autoplay loop muted playsinline preload="metadata" class="lazy-video">
                 <source src="assets/default-mode/fish.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
@@ -272,15 +265,15 @@
         </div>
         
         <div class="fish">
-            <video autoplay loop muted>
+            <video autoplay loop muted playsinline preload="metadata" class="lazy-video">
                 <source src="assets/default-mode/fish.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
     </div>
-    
+
     <div class="side">
-        <video autoplay loop muted>
+        <video autoplay loop muted playsinline preload="metadata" class="lazy-video">
             <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>

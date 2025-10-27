@@ -1,5 +1,29 @@
 // Main Application - Initializes and coordinates all components
 document.addEventListener('DOMContentLoaded', () => {
+    // Video optimization with Intersection Observer
+    const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target;
+            if (entry.isIntersecting) {
+                // Play video when visible
+                video.play().catch(() => {
+                    // Ignore errors if autoplay is blocked
+                });
+            } else {
+                // Pause video when not visible to save resources
+                video.pause();
+            }
+        });
+    }, {
+        threshold: 0.25, // Start playing when 25% visible
+        rootMargin: '50px' // Start loading slightly before visible
+    });
+
+    // Observe all lazy videos
+    document.querySelectorAll('.lazy-video').forEach(video => {
+        videoObserver.observe(video);
+    });
+
     // Initialize time display
     const timeDisplay = {
         elements: {

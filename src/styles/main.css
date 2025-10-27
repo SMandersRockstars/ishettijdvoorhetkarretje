@@ -172,11 +172,13 @@ video {
 }
 
 .halloween-theme .coin {
-    filter: drop-shadow(0 0 5px #ff6b35);
+    /* Removed drop-shadow for better animation performance */
+    /* filter: drop-shadow(0 0 5px #ff6b35); */
 }
 
 .halloween-theme .party-coin {
-    filter: drop-shadow(0 0 8px #ff6b35);
+    /* Removed drop-shadow for better animation performance */
+    /* filter: drop-shadow(0 0 8px #ff6b35); */
 }
 
 .halloween-theme .icon {
@@ -210,11 +212,13 @@ video {
 }
 
 .christmas-theme .coin {
-    filter: drop-shadow(0 0 5px #ffd700);
+    /* Removed drop-shadow for better animation performance */
+    /* filter: drop-shadow(0 0 5px #ffd700); */
 }
 
 .christmas-theme .party-coin {
-    filter: drop-shadow(0 0 8px #ffd700);
+    /* Removed drop-shadow for better animation performance */
+    /* filter: drop-shadow(0 0 8px #ffd700); */
 }
 
 .christmas-theme .icon {
@@ -229,4 +233,26 @@ video {
 .christmas-theme #waiting-content p {
     color: #ffd700;
     text-shadow: 1px 1px 2px #000;
+}
+
+/* Toggle Festive Button - moved from inline styles for better performance */
+.toggle-festive-btn {
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transform: scale(1);
+}
+
+.toggle-festive-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
 }
