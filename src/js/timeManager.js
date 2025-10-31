@@ -2,6 +2,7 @@
 class TimeManager {
     constructor() {
         this.updateCallbacks = [];
+        this.lastState = null;
     }
 
     isPartyTime() {
@@ -66,7 +67,15 @@ class TimeManager {
 
     notifySubscribers() {
         const state = this.getTimeState();
-        this.updateCallbacks.forEach(callback => callback(state));
+
+        // Only notify if state has actually changed
+        if (!this.lastState ||
+            this.lastState.isPartyTime !== state.isPartyTime ||
+            this.lastState.remainingTime !== state.remainingTime) {
+
+            this.lastState = state;
+            this.updateCallbacks.forEach(callback => callback(state));
+        }
     }
 
     startUpdates(intervalMs = 60000) {
