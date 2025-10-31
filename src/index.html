@@ -157,11 +157,17 @@
             if (!rafPending && annoyingButton) {
                 rafPending = true;
                 requestAnimationFrame(() => {
+                    // Check if button still exists before trying to move it
+                    if (!annoyingButton || !document.body.contains(annoyingButton)) {
+                        rafPending = false;
+                        return;
+                    }
+
                     const top = mousePos.y - annoyingButton.clientHeight / 2;
                     const left = mousePos.x - annoyingButton.clientWidth / 2;
 
-                    // Use transform for better performance
-                    annoyingButton.style.transform = `translate(${left}px, ${top}px)`;
+                    annoyingButton.style.top = `${top}px`;
+                    annoyingButton.style.left = `${left}px`;
                     rafPending = false;
                 });
             }
