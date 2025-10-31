@@ -146,9 +146,14 @@
         }
 
         // Optimized mousemove with RAF batching and element caching
-        const annoyingButton = document.querySelector('.annoying-button');
+        let annoyingButton = null;
         let mousePos = { x: 0, y: 0 };
         let rafPending = false;
+
+        // Wait for DOM to load before selecting button
+        document.addEventListener('DOMContentLoaded', () => {
+            annoyingButton = document.querySelector('.annoying-button');
+        });
 
         addEventListener('mousemove', (e) => {
             mousePos.x = e.clientX;
