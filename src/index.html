@@ -153,6 +153,17 @@
         // Wait for DOM to load before selecting button
         document.addEventListener('DOMContentLoaded', () => {
             annoyingButton = document.querySelector('.annoying-button');
+
+            // Create audio element for cart rattling sound
+            const cartSound = new Audio('assets/AUD-20251031-WA0023.opus');
+
+            // Play cart sound on mouse click
+            document.addEventListener('click', () => {
+                cartSound.currentTime = 0; // Reset to start if already playing
+                cartSound.play().catch(err => {
+                    console.log('Audio play failed:', err);
+                });
+            });
         });
 
         addEventListener('mousemove', (e) => {
