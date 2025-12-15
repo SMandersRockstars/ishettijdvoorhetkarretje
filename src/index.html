@@ -81,12 +81,13 @@
         function init() {
             // Get themed video from festivity manager
             const videoSrc = window.festivityManager ? window.festivityManager.getVideo('init') : 'assets/default-mode/fish.mp4';
-            
-            // Check if we're in festive mode
-            const isFestiveMode = window.festivityManager && window.festivityManager.getCurrentTheme().name !== 'Default';
-            
-            if (isFestiveMode) {
-                // In festive mode: show video in bottom right corner with sound
+
+            // Check if we're in a special festive mode that should show init video
+            const currentTheme = window.festivityManager ? window.festivityManager.getCurrentTheme().name : 'Default';
+            const shouldShowInitVideo = currentTheme === 'Halloween'; // Only show for Halloween
+
+            if (shouldShowInitVideo) {
+                // In special festive mode: show video in bottom right corner with sound
                 const html = `
                     <video loop id="main-init-video">
                         <source src="${videoSrc}" type="video/mp4">
@@ -108,7 +109,7 @@
                 video.style.height = document.body.clientHeight * 0.2 + 'px';
                 video.play();
             } else {
-                // In default mode: keep original hidden behavior
+                // In default/Christmas mode: keep original hidden behavior
                 const html = `
                     <video loop>
                         <source src="${videoSrc}" type="video/mp4">
@@ -131,9 +132,13 @@
             // Remove button element
             button.remove();
 
-            // Add new gif fixed to the bottom left corner
+            // Add new gif fixed to the bottom left corner (using themed version)
+            const catGifSrc = window.festivityManager ? window.festivityManager.getGif('cat') : 'assets/default-mode/cat.gif';
+            console.log('Init button clicked - cat gif src:', catGifSrc);
+            console.log('Current theme:', window.festivityManager ? window.festivityManager.getCurrentTheme().name : 'No festivity manager');
             const gif = document.createElement('img');
-            gif.src = 'assets/default-mode/cat.gif';
+            gif.src = catGifSrc;
+            gif.id = 'cat-gif'; // Add ID for easier selection
 
             gif.style.position = 'fixed';
             gif.style.bottom = `0px`;
@@ -142,6 +147,19 @@
             gif.style.height = document.body.clientHeight * 0.2 + 'px';
             gif.style.zIndex = '1000';
             document.body.appendChild(gif);
+
+            // Update festivity manager cache now that cat exists
+            if (window.festivityManager) {
+                window.festivityManager.cachedElements = null;
+
+                // Trigger background audio playback (user interaction allows it)
+                if (window.festivityManager.backgroundAudio) {
+                    console.log('Attempting to play background audio after init button click');
+                    window.festivityManager.backgroundAudio.play().catch(e => {
+                        console.error('Failed to play background audio:', e);
+                    });
+                }
+            }
 
         }
 
@@ -183,9 +201,17 @@
         function toggleFestiveTheme() {
             if (window.festivityManager) {
                 const newTheme = window.festivityManager.toggleTheme();
-                
+
                 // Update button visibility based on current theme
                 updateToggleButtonVisibility();
+
+                // Trigger background audio playback after toggle (user interaction allows it)
+                if (window.festivityManager.backgroundAudio) {
+                    console.log('Attempting to play background audio after theme toggle');
+                    window.festivityManager.backgroundAudio.play().catch(e => {
+                        console.error('Failed to play background audio:', e);
+                    });
+                }
             } else {
                 console.error('Festivity manager not available');
             }
