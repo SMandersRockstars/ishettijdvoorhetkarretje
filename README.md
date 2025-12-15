@@ -42,6 +42,20 @@ Then visit `http://localhost:6969`
 - **Maintainable Code**: Easy to understand and modify
 - **Development Server**: Simple local development setup
 
+### 🧪 Testing
+
+**To test "Party Time" (Het Karretje time) without waiting for Friday:**
+
+1. Open the browser console (F12)
+2. Run this command:
+   ```javascript
+   window.timeManager.toggleTestMode()
+   ```
+3. The page will immediately switch to party mode! 🎉
+4. Run the same command again to toggle it off
+
+This is useful for testing the party time animations, effects, and seasonal themes.
+
 ## Feedback en bijdragen!!
 
 Heb je ideeën voor verbeteringen, nieuwe functionaliteiten, of wil je gewoon meedenken over het karretje?  

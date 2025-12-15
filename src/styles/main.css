@@ -117,6 +117,8 @@ video {
 #beer-drinking-gif {
     max-width: 90vw;
     height: auto;
+    margin-top: 30px;
+    clear: both;
 }
 
 /* Media queries for beer drinking GIF to maximize at 300px when filling background */
@@ -202,8 +204,7 @@ video {
 }
 
 .christmas-theme .yes {
-    background: linear-gradient(45deg, #ffd700, #ffed4e);
-    box-shadow: 0 0 20px #ffd700;
+    background-color: green;
 }
 
 .christmas-theme .no {

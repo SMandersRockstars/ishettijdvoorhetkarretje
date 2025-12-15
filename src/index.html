@@ -134,8 +134,6 @@
 
             // Add new gif fixed to the bottom left corner (using themed version)
             const catGifSrc = window.festivityManager ? window.festivityManager.getGif('cat') : 'assets/default-mode/cat.gif';
-            console.log('Init button clicked - cat gif src:', catGifSrc);
-            console.log('Current theme:', window.festivityManager ? window.festivityManager.getCurrentTheme().name : 'No festivity manager');
             const gif = document.createElement('img');
             gif.src = catGifSrc;
             gif.id = 'cat-gif'; // Add ID for easier selection
@@ -154,10 +152,7 @@
 
                 // Trigger background audio playback (user interaction allows it)
                 if (window.festivityManager.backgroundAudio) {
-                    console.log('Attempting to play background audio after init button click');
-                    window.festivityManager.backgroundAudio.play().catch(e => {
-                        console.error('Failed to play background audio:', e);
-                    });
+                    window.festivityManager.backgroundAudio.play().catch(() => {});
                 }
             }
 
@@ -207,10 +202,7 @@
 
                 // Trigger background audio playback after toggle (user interaction allows it)
                 if (window.festivityManager.backgroundAudio) {
-                    console.log('Attempting to play background audio after theme toggle');
-                    window.festivityManager.backgroundAudio.play().catch(e => {
-                        console.error('Failed to play background audio:', e);
-                    });
+                    window.festivityManager.backgroundAudio.play().catch(() => {});
                 }
             } else {
                 console.error('Festivity manager not available');
@@ -260,7 +252,7 @@
         }
     </style>
 
-    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/main.css?v=4">
 </head>
 <body>
     <button class="annoying-button" style="font-size: 2em" onclick="init()">Klik hier voor de volledige ervaring</button>

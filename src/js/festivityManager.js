@@ -194,31 +194,20 @@ class FestivityManager {
 
         // If theme has background audio, create and play it
         if (theme.audio && theme.audio.background) {
-            console.log('Playing background audio:', theme.audio.background);
             this.backgroundAudio = new Audio(theme.audio.background);
             this.backgroundAudio.loop = true;
             this.backgroundAudio.volume = 0.5; // Set volume to 50%
 
             // Play audio (may require user interaction)
             this.backgroundAudio.play().catch(e => {
-                console.log('Background audio autoplay blocked. User interaction required:', e);
+                console.log('Background audio autoplay blocked. User interaction required.');
             });
-        } else {
-            console.log('No background audio for theme:', theme.name);
         }
     }
 
     updateMediaElements() {
         const theme = this.getCurrentTheme();
         const elements = this.cacheElements();
-
-        console.log('Updating media elements for theme:', theme.name);
-        console.log('Found elements:', {
-            beerGif: !!elements.beerGif,
-            catGif: !!elements.catGif,
-            fishElements: elements.fishElements.length,
-            subwayVideos: elements.subwayVideos.length
-        });
 
         // Update beer drinking gif
         if (elements.beerGif) {
@@ -227,14 +216,10 @@ class FestivityManager {
 
         // Update cat gif (if it exists)
         if (elements.catGif) {
-            console.log('Updating cat gif to:', theme.gifs.cat);
             this.updateImageWithFallback(elements.catGif, theme.gifs.cat, 'assets/default-mode/cat.gif');
-        } else {
-            console.log('Cat gif element not found');
         }
 
         // Update fish - handle both video and gif formats, and both video and img elements
-        console.log('Updating', elements.fishElements.length, 'fish elements to:', theme.gifs.fish);
         elements.fishElements.forEach(element => {
             this.updateAnyMediaElement(element, theme.gifs.fish, 'assets/default-mode/fish.mp4');
         });
@@ -246,14 +231,12 @@ class FestivityManager {
         });
 
         // Update subway surfers videos (side panels) - handle both video and gif formats
-        console.log('Updating', elements.subwayVideos.length, 'subway videos to:', theme.videos.subway);
         elements.subwayVideos.forEach(videoSource => {
             this.updateMediaElement(videoSource, theme.videos.subway, 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4');
         });
 
         // Double-check all subway videos are muted
         document.querySelectorAll('.side video').forEach(video => {
-            console.log('Subway video muted state:', video.muted, 'src:', video.querySelector('source')?.src);
             video.muted = true;
             video.volume = 0;
         });
@@ -268,18 +251,16 @@ class FestivityManager {
         if (mainInitVideo) {
             if (theme.name === 'Default') {
                 // Hide init video in default mode
-                console.log('Hiding init video for default mode');
                 mainInitVideo.style.display = 'none';
             } else {
                 // Update init video for festive modes
-                console.log('Updating init video to:', theme.videos.init);
                 const source = mainInitVideo.querySelector('source');
                 if (source) {
                     source.src = theme.videos.init;
                     mainInitVideo.muted = false; // Init video should have sound in festive mode
                     mainInitVideo.load();
                     mainInitVideo.style.display = 'block';
-                    mainInitVideo.play().catch(e => console.log('Init video play failed:', e));
+                    mainInitVideo.play().catch(() => {}); // Ignore autoplay errors
                 }
             }
         }
@@ -337,11 +318,9 @@ class FestivityManager {
         if (element.tagName === 'IMG') {
             if (isGif) {
                 // img → img: just update src
-                console.log('Updating img src to:', newSrc);
                 element.src = newSrc;
             } else {
                 // img → video: replace img with video
-                console.log('Replacing img with video:', newSrc);
                 const video = document.createElement('video');
                 video.autoplay = true;
                 video.loop = true;
@@ -372,12 +351,10 @@ class FestivityManager {
         const video = sourceElement.parentElement;
 
         if (!video || video.tagName !== 'VIDEO') {
-            console.warn('updateMediaElement: Invalid video element', sourceElement);
             return;
         }
 
         if (isGif) {
-            console.log('Replacing video with GIF:', newSrc);
             // Replace video with img element for GIFs
             const img = document.createElement('img');
             img.src = newSrc;
@@ -393,7 +370,6 @@ class FestivityManager {
 
             // Replace video with img
             video.parentElement.replaceChild(img, video);
-            console.log('Successfully replaced video with img for:', newSrc);
 
             // Add error handling
             img.onerror = () => {
