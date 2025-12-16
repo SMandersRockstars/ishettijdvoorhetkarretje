@@ -3,9 +3,15 @@ class TimeManager {
     constructor() {
         this.updateCallbacks = [];
         this.lastState = null;
+        this.testMode = false; // Set to true to force party time for testing
     }
 
     isPartyTime() {
+        // Allow test mode override
+        if (this.testMode) {
+            return true;
+        }
+
         const now = new Date();
         const day = now.getDay();
         const hour = now.getHours();
@@ -81,6 +87,14 @@ class TimeManager {
     startUpdates(intervalMs = 60000) {
         this.notifySubscribers();
         setInterval(() => this.notifySubscribers(), intervalMs);
+    }
+
+    // Toggle test mode for debugging
+    toggleTestMode() {
+        this.testMode = !this.testMode;
+        console.log('Test mode:', this.testMode ? 'ENABLED (Party time forced!)' : 'DISABLED');
+        this.notifySubscribers(); // Immediately update the display
+        return this.testMode;
     }
 }
 
