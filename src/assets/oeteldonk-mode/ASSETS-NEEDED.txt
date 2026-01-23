@@ -1,0 +1,40 @@
+Oeteldonk Mode - Benodigde Assets
+==================================
+
+COINS (voor de cursor animatie):
+- frog-coin.png        - Kiull (kikker) munt
+- carnival-coin.png    - Carnaval thema munt
+- confetti-coin.png    - Confetti munt
+- mask-coin.png        - Carnavalsmasker munt
+
+GIFS/VIDEO:
+- beer-drinking.gif       - Bier drinken animatie (carnaval thema)
+- oeteldonk-cat.gif       - Kat animatie (carnaval thema)
+- oeteldonk-fish.gif      - Vis animatie (carnaval thema)
+- oeteldonk-subway.mp4    - Zijpaneel video
+- oeteldonk-init.mp4      - Init video (rechtsonder)
+
+AUDIO:
+- oeteldonk-music.mp3     - Achtergrondmuziek (carnavalsmuziek)
+
+PARTY IMAGES (bij party time):
+- oeteldonk-heineken.png  - Heineken carnaval versie
+- oeteldonk-hertog.png    - Hertog Jan carnaval versie
+- oeteldonk-lays.png      - Lays carnaval versie
+- oeteldonk-boonekamp.png - Boonekamp carnaval versie
+
+CART ICONS:
+- oeteldonk-cart.png      - Leeg karretje (carnaval thema)
+- oeteldonk-full-cart.png - Vol karretje (carnaval thema)
+
+KLEUREN:
+- Rood:  #cc0000 / #ff3333
+- Geel:  #ffcc00 / #ffe066
+- Wit:   #ffffff
+
+THEMA ELEMENTEN:
+- De Kiull (kikker mascotte)
+- Rood-wit-gele vlag
+- Confetti
+- Carnavalsmaskers
+- Vastelaovend sfeer

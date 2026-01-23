@@ -6,6 +6,37 @@ class FestivityManager {
         this.backgroundAudio = null; // Store audio element
 
         this.themes = {
+            oeteldonk: {
+                name: 'Oeteldonk',
+                months: [2], // February - Carnival season
+                coinImages: [
+                    'assets/oeteldonk-mode/frog-coin.png',
+                    'assets/oeteldonk-mode/carnival-coin.png',
+                    'assets/oeteldonk-mode/confetti-coin.png',
+                    'assets/oeteldonk-mode/mask-coin.png'
+                ],
+                gifs: {
+                    beer: 'assets/default-mode/beer-drinking.gif',
+                    cat: 'assets/oeteldonk-mode/oeteldonk-cat.gif',
+                    fish: 'assets/default-mode/fish.mp4'
+                },
+                videos: {
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    init: 'assets/default-mode/fish.mp4'
+                },
+                audio: {
+                    background: 'assets/oeteldonk-mode/oeteldonk-music.mp3'
+                },
+                partyImages: [
+                    'assets/oeteldonk-mode/oeteldonk-heineken.png',
+                    'assets/oeteldonk-mode/oeteldonk-hertog.png',
+                    'assets/oeteldonk-mode/oeteldonk-lays.png',
+                    'assets/oeteldonk-mode/oeteldonk-boonekamp.png'
+                ],
+                icon: 'assets/oeteldonk-mode/oeteldonk-cart.png',
+                fullCart: 'assets/oeteldonk-mode/oeteldonk-full-cart.png',
+                cssClass: 'oeteldonk-theme'
+            },
             halloween: {
                 name: 'Halloween',
                 months: [10], // October
@@ -162,7 +193,7 @@ class FestivityManager {
 
     applyTheme() {
         // Remove existing theme classes
-        document.body.classList.remove('halloween-theme', 'christmas-theme', 'default-theme');
+        document.body.classList.remove('oeteldonk-theme', 'halloween-theme', 'christmas-theme', 'default-theme');
 
         // Add current theme class
         document.body.classList.add(this.getCssClass());

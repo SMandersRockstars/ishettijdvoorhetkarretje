@@ -236,6 +236,41 @@ video {
     text-shadow: 1px 1px 2px #000;
 }
 
+/* Oeteldonk (Carnival) Theme Styles - Red, White, Yellow */
+.oeteldonk-theme {
+    background: linear-gradient(135deg, #cc0000 0%, #ff3333 30%, #ffcc00 70%, #ffe066 100%);
+    color: #ffffff;
+}
+
+.oeteldonk-theme .yes {
+    background: linear-gradient(
+        to bottom,
+        #ff0000 0%, #ff0000 33.33%,
+        #ffffff 33.33%, #ffffff 66.66%,
+        #ffcc00 66.66%, #ffcc00 100%
+    );
+    box-shadow: 0 0 20px #ffcc00;
+}
+
+.oeteldonk-theme .no {
+    background: linear-gradient(45deg, #cc0000, #ff3333);
+    box-shadow: 0 0 20px #cc0000;
+}
+
+.oeteldonk-theme .icon {
+    filter: drop-shadow(0 0 10px #ffcc00);
+}
+
+.oeteldonk-theme .message {
+    text-shadow: 2px 2px 4px #000;
+    font-weight: bold;
+}
+
+.oeteldonk-theme #waiting-content p {
+    color: #ffffff;
+    text-shadow: 1px 1px 2px #000;
+}
+
 /* Toggle Festive Button - moved from inline styles for better performance */
 .toggle-festive-btn {
     background: linear-gradient(45deg, #ff6b35, #f7931e);
