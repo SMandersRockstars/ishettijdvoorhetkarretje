@@ -79,83 +79,28 @@
     </script>
     <script>
         function init() {
-            // Get themed video from festivity manager
-            const videoSrc = window.festivityManager ? window.festivityManager.getVideo('init') : 'assets/default-mode/fish.mp4';
-
-            // Check if we're in a special festive mode that should show init video
-            const currentTheme = window.festivityManager ? window.festivityManager.getCurrentTheme().name : 'Default';
-            const shouldShowInitVideo = currentTheme === 'Halloween'; // Only show for Halloween
-
-            if (shouldShowInitVideo) {
-                // In special festive mode: show video in bottom right corner with sound
-                const html = `
-                    <video loop id="main-init-video">
-                        <source src="${videoSrc}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>`
-
-                const div = document.createElement('div');
-                div.innerHTML = html;
-                document.body.appendChild(div);
-
-                const video = div.querySelector('video');
-                video.muted = false;
-                video.autoplay = true;
-                video.style.position = 'fixed';
-                video.style.bottom = '0px';
-                video.style.right = '0px';
-                video.style.zIndex = '1000';
-                video.style.width = document.body.clientWidth * 0.2 + 'px';
-                video.style.height = document.body.clientHeight * 0.2 + 'px';
-                video.play();
-            } else {
-                // In default/Christmas mode: keep original hidden behavior
-                const html = `
-                    <video loop>
-                        <source src="${videoSrc}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>`
-
-                const div = document.createElement('div');
-                div.style.display = 'none';
-                div.innerHTML = html;
-                document.body.appendChild(div);
-
-                const video = div.querySelector('video');
-                video.muted = false;
-                video.autoplay = true;
-                video.play();
-            }
-
+            // Remove the button
             const button = document.querySelector('.annoying-button');
-
-            // Remove button element
             button.remove();
 
-            // Add new gif fixed to the bottom left corner (using themed version)
+            // Add cat gif to bottom left corner
             const catGifSrc = window.festivityManager ? window.festivityManager.getGif('cat') : 'assets/default-mode/cat.gif';
             const gif = document.createElement('img');
             gif.src = catGifSrc;
-            gif.id = 'cat-gif'; // Add ID for easier selection
-
+            gif.id = 'cat-gif';
             gif.style.position = 'fixed';
-            gif.style.bottom = `0px`;
+            gif.style.bottom = '0px';
             gif.style.left = '0px';
             gif.style.width = document.body.clientWidth * 0.2 + 'px';
             gif.style.height = document.body.clientHeight * 0.2 + 'px';
             gif.style.zIndex = '1000';
             document.body.appendChild(gif);
 
-            // Update festivity manager cache now that cat exists
+            // Update festivity manager and start background audio
             if (window.festivityManager) {
                 window.festivityManager.cachedElements = null;
-
-                // Trigger background audio playback (user interaction allows it)
-                if (window.festivityManager.backgroundAudio) {
-                    window.festivityManager.backgroundAudio.play().catch(() => {});
-                }
+                window.festivityManager.playBackgroundAudio();
             }
-
         }
 
         // Optimized mousemove with RAF batching and element caching
@@ -309,7 +254,7 @@
     </div>
 
     <script src="js/timeManager.js?v=2"></script>
-    <script src="js/festivityManager.js?v=19"></script>
+    <script src="js/festivityManager.js?v=22"></script>
     <script src="js/coinCursor.js?v=2"></script>
     <script src="js/main.js?v=2"></script>
 </body>
