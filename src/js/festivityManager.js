@@ -55,6 +55,9 @@ class FestivityManager {
                     subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
                     init: 'assets/spooktober-mode/halloween-init.mp4'
                 },
+                audio: {
+                    background: 'assets/default-mode/fish-music.mp3' // Fallback to default music
+                },
                 partyImages: [
                     'assets/default-mode/heineken.png',
                     'assets/default-mode/hertog_jan.png',
@@ -108,6 +111,9 @@ class FestivityManager {
                 videos: {
                     subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
                     init: 'assets/default-mode/fish.mp4'
+                },
+                audio: {
+                    background: 'assets/default-mode/fish-music.mp3'
                 },
                 partyImages: [
                     'assets/default-mode/heineken.png',
@@ -184,8 +190,7 @@ class FestivityManager {
                 catGif: document.getElementById('cat-gif') || document.querySelector('img[src*="cat.gif"]'),
                 fishElements: allFishElements,
                 subwayVideos: document.querySelectorAll('.side video source'),
-                cartIcon: document.getElementById('icon'),
-                mainInitVideo: document.getElementById('main-init-video')
+                cartIcon: document.getElementById('icon')
             };
         }
         return this.cachedElements;
@@ -213,8 +218,19 @@ class FestivityManager {
         this.updateBackgroundAudio();
     }
 
-    updateBackgroundAudio() {
+    // Get background audio source for current theme (with fallback to default)
+    getBackgroundAudioSrc() {
         const theme = this.getCurrentTheme();
+        if (theme.audio && theme.audio.background) {
+            return theme.audio.background;
+        }
+        // Fallback to default theme's audio
+        return this.themes.default.audio.background;
+    }
+
+    // Update background audio element (creates new Audio if needed)
+    updateBackgroundAudio() {
+        const audioSrc = this.getBackgroundAudioSrc();
 
         // Stop and remove current audio if it exists
         if (this.backgroundAudio) {
@@ -223,17 +239,23 @@ class FestivityManager {
             this.backgroundAudio = null;
         }
 
-        // If theme has background audio, create and play it
-        if (theme.audio && theme.audio.background) {
-            this.backgroundAudio = new Audio(theme.audio.background);
-            this.backgroundAudio.loop = true;
-            this.backgroundAudio.volume = 0.5; // Set volume to 50%
+        // Create new audio element
+        this.backgroundAudio = new Audio(audioSrc);
+        this.backgroundAudio.loop = true;
+        this.backgroundAudio.volume = 0.5;
 
-            // Play audio (may require user interaction)
-            this.backgroundAudio.play().catch(e => {
-                console.log('Background audio autoplay blocked. User interaction required.');
-            });
+        // Try to play (may require user interaction)
+        this.backgroundAudio.play().catch(() => {
+            console.log('Background audio autoplay blocked. User interaction required.');
+        });
+    }
+
+    // Play background audio (call after user interaction)
+    playBackgroundAudio() {
+        if (!this.backgroundAudio) {
+            this.updateBackgroundAudio();
         }
+        this.backgroundAudio.play().catch(() => {});
     }
 
     updateMediaElements() {
@@ -255,10 +277,9 @@ class FestivityManager {
             this.updateAnyMediaElement(element, theme.gifs.fish, 'assets/default-mode/fish.mp4');
         });
 
-        // Unmute fish videos in default mode (for default fish.mp4 audio), keep muted in festive modes
-        const shouldMuteFish = theme.name !== 'Default';
+        // Always keep fish videos muted - audio now comes from background audio
         document.querySelectorAll('.fish video').forEach(video => {
-            video.muted = shouldMuteFish;
+            video.muted = true;
         });
 
         // Update subway surfers videos (side panels) - handle both video and gif formats
@@ -277,24 +298,10 @@ class FestivityManager {
             this.updateImageWithFallback(elements.cartIcon, theme.icon, 'assets/default-mode/empty_cart.png');
         }
 
-        // Update or hide init video based on theme
-        const mainInitVideo = document.getElementById('main-init-video');
-        if (mainInitVideo) {
-            if (theme.name === 'Default') {
-                // Hide init video in default mode
-                mainInitVideo.style.display = 'none';
-            } else {
-                // Update init video for festive modes
-                const source = mainInitVideo.querySelector('source');
-                if (source) {
-                    source.src = theme.videos.init;
-                    mainInitVideo.muted = false; // Init video should have sound in festive mode
-                    mainInitVideo.load();
-                    mainInitVideo.style.display = 'block';
-                    mainInitVideo.play().catch(() => {}); // Ignore autoplay errors
-                }
-            }
-        }
+        // Ensure ALL videos on page are muted (audio comes from backgroundAudio)
+        document.querySelectorAll('video').forEach(video => {
+            video.muted = true;
+        });
     }
 
     updateImageWithFallback(imgElement, newSrc, fallbackSrc) {
@@ -436,15 +443,12 @@ class FestivityManager {
         if (this.themes[themeName]) {
             this.currentTheme = themeName;
             this.applyTheme();
-            
+
             // Force coin cursor to refresh its images
             if (window.coinCursor) {
                 window.coinCursor.updateImages();
             }
-            
-            // Hide main init video when switching themes
-            this.hideMainInitVideo();
-            
+
             // Update toggle button visibility
             if (typeof updateToggleButtonVisibility === 'function') {
                 updateToggleButtonVisibility();
@@ -478,16 +482,6 @@ class FestivityManager {
         return this.currentTheme;
     }
 
-
-    // Hide main init video when switching themes (if it exists)
-    hideMainInitVideo() {
-        const elements = this.cacheElements();
-        if (elements.mainInitVideo) {
-            elements.mainInitVideo.remove();
-            // Clear cache after removal
-            this.cachedElements.mainInitVideo = null;
-        }
-    }
 }
 
 // Create global instance
