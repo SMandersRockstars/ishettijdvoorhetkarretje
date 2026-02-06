@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF8C42"/>
+      <stop offset="40%" stop-color="#FFB347"/>
+      <stop offset="100%" stop-color="#87CEEB"/>
+    </linearGradient>
+    <linearGradient id="mountain1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="30%" stop-color="#E0E8F0"/>
+      <stop offset="100%" stop-color="#5A7A9A"/>
+    </linearGradient>
+    <linearGradient id="cartBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A90D9"/>
+      <stop offset="100%" stop-color="#2C5F8A"/>
+    </linearGradient>
+    <linearGradient id="beer" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="20%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#DAA520"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Apres-ski sunset sky -->
+  <rect width="512" height="512" rx="40" fill="url(#sky)"/>
+
+  <!-- Mountains -->
+  <polygon points="0,350 100,200 200,290 280,170 380,270 460,190 512,280 512,512 0,512" fill="url(#mountain1)" opacity="0.5"/>
+
+  <!-- Snow ground -->
+  <ellipse cx="256" cy="460" rx="280" ry="80" fill="#fff" opacity="0.9"/>
+
+  <!-- Cart body - overflowing! -->
+  <rect x="100" y="260" width="250" height="140" rx="10" fill="url(#cartBody)" stroke="#1E3A5F" stroke-width="4"/>
+  <line x1="100" y1="330" x2="350" y2="330" stroke="#1E3A5F" stroke-width="3"/>
+
+  <!-- Cart handle -->
+  <path d="M 350 290 Q 395 290 395 245 Q 395 210 380 200" stroke="#888" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Wheels -->
+  <circle cx="145" cy="410" r="22" fill="#444" stroke="#333" stroke-width="4"/>
+  <circle cx="145" cy="410" r="8" fill="#888"/>
+  <circle cx="305" cy="410" r="22" fill="#444" stroke="#333" stroke-width="4"/>
+  <circle cx="305" cy="410" r="8" fill="#888"/>
+
+  <!-- Beer bottles overflowing -->
+  <rect x="130" y="220" width="18" height="50" rx="4" fill="#2D5016" stroke="#1a3a0a" stroke-width="2"/>
+  <rect x="135" y="215" width="8" height="12" rx="3" fill="#2D5016"/>
+
+  <rect x="165" y="210" width="18" height="55" rx="4" fill="#8B4513" stroke="#5C2D0A" stroke-width="2"/>
+
+  <rect x="200" y="225" width="18" height="45" rx="4" fill="#2D5016" stroke="#1a3a0a" stroke-width="2"/>
+
+  <!-- Beer glass with foam -->
+  <rect x="240" y="215" width="30" height="50" rx="3" fill="url(#beer)" stroke="#DAA520" stroke-width="2"/>
+  <ellipse cx="255" cy="218" rx="16" ry="6" fill="#fff"/>
+
+  <!-- Skis sticking out -->
+  <rect x="290" y="160" width="10" height="110" rx="5" fill="#E63946" transform="rotate(-8 295 215)"/>
+  <rect x="310" y="155" width="10" height="110" rx="5" fill="#1D3557" transform="rotate(-3 315 210)"/>
+
+  <!-- Chips/snacks on top shelf -->
+  <rect x="115" y="340" width="35" height="45" rx="5" fill="#FFD700" stroke="#DAA520" stroke-width="2"/>
+  <rect x="160" y="338" width="35" height="47" rx="5" fill="#E63946" stroke="#C1121F" stroke-width="2"/>
+
+  <!-- Snowflakes as SVG shapes -->
+  <g fill="#fff" opacity="0.5">
+    <g transform="translate(60,170) scale(0.4)">
+      <line x1="0" y1="-20" x2="0" y2="20" stroke="#fff" stroke-width="3"/>
+      <line x1="-17" y1="-10" x2="17" y2="10" stroke="#fff" stroke-width="3"/>
+      <line x1="-17" y1="10" x2="17" y2="-10" stroke="#fff" stroke-width="3"/>
+    </g>
+    <g transform="translate(460,240) scale(0.35)">
+      <line x1="0" y1="-20" x2="0" y2="20" stroke="#fff" stroke-width="3"/>
+      <line x1="-17" y1="-10" x2="17" y2="10" stroke="#fff" stroke-width="3"/>
+      <line x1="-17" y1="10" x2="17" y2="-10" stroke="#fff" stroke-width="3"/>
+    </g>
+    <g transform="translate(400,100) scale(0.3)">
+      <line x1="0" y1="-20" x2="0" y2="20" stroke="#fff" stroke-width="3"/>
+      <line x1="-17" y1="-10" x2="17" y2="10" stroke="#fff" stroke-width="3"/>
+      <line x1="-17" y1="10" x2="17" y2="-10" stroke="#fff" stroke-width="3"/>
+    </g>
+  </g>
+
+  <!-- Sun glow for apres-ski vibes -->
+  <circle cx="80" cy="70" r="35" fill="#FFD700" opacity="0.4"/>
+  <circle cx="80" cy="70" r="20" fill="#FFF" opacity="0.3"/>
+</svg>

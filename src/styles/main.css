@@ -271,6 +271,62 @@ video {
     text-shadow: 1px 1px 2px #000;
 }
 
+/* Wintersport Theme Styles - Ice blue, snow white, mountain vibes */
+.wintersport-theme {
+    background: linear-gradient(135deg, #0a2463 0%, #1a73b5 40%, #87CEEB 70%, #e8f4fd 100%);
+    color: #ffffff;
+}
+
+.wintersport-theme .yes {
+    background: linear-gradient(45deg, #00b4d8, #48cae4, #90e0ef);
+    box-shadow: 0 0 25px rgba(0, 180, 216, 0.6), 0 0 50px rgba(144, 224, 239, 0.3);
+}
+
+.wintersport-theme .no {
+    background: linear-gradient(45deg, #1a73b5, #2196F3);
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+}
+
+.wintersport-theme .icon {
+    filter: drop-shadow(0 0 10px rgba(144, 224, 239, 0.8));
+}
+
+.wintersport-theme .message {
+    text-shadow: 2px 2px 4px rgba(10, 36, 99, 0.8);
+    font-weight: bold;
+}
+
+.wintersport-theme #waiting-content p {
+    color: #e0f0ff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Wintersport snowflake styles */
+.snowflake {
+    position: fixed;
+    top: -60px;
+    pointer-events: none;
+    z-index: 9998;
+    color: #fff;
+    font-size: 24px;
+    text-shadow: 0 0 8px rgba(255,255,255,0.8);
+    animation: snowflake-fall linear infinite, snowflake-sway ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes snowflake-fall {
+    0% { top: -60px; opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 105vh; opacity: 0.3; }
+}
+
+@keyframes snowflake-sway {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(30px) rotate(90deg); }
+    50% { transform: translateX(-20px) rotate(180deg); }
+    75% { transform: translateX(25px) rotate(270deg); }
+}
+
 /* Toggle Festive Button - moved from inline styles for better performance */
 .toggle-festive-btn {
     background: linear-gradient(45deg, #ff6b35, #f7931e);

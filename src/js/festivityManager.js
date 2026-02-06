@@ -99,6 +99,37 @@ class FestivityManager {
                 fullCart: 'assets/christmas-mode/christmas-full-cart.jpg',
                 cssClass: 'christmas-theme'
             },
+            wintersport: {
+                name: 'Wintersport',
+                months: [3], // March - Ski season
+                coinImages: [
+                    'assets/wintersport-mode/ski-coin.svg',
+                    'assets/wintersport-mode/snowboard-coin.svg',
+                    'assets/wintersport-mode/gondel-coin.svg',
+                    'assets/wintersport-mode/snowflake-coin.svg'
+                ],
+                gifs: {
+                    beer: 'assets/default-mode/beer-drinking.gif',
+                    cat: 'assets/wintersport-mode/vallendeskiboy.gif',
+                    fish: 'assets/default-mode/fish.mp4'
+                },
+                videos: {
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    init: 'assets/default-mode/fish.mp4'
+                },
+                audio: {
+                    background: 'assets/wintersport-mode/DJ Ötzi - Anton aus Tirol (Not Barocka Remix).mp3'
+                },
+                partyImages: [
+                    'assets/default-mode/heineken.png',
+                    'assets/default-mode/hertog_jan.png',
+                    'assets/default-mode/lays.png',
+                    'assets/default-mode/boonekamp.png'
+                ],
+                icon: 'assets/wintersport-mode/wintersport-empty-cart.png',
+                fullCart: 'assets/wintersport-mode/wintersport-full-cart.png',
+                cssClass: 'wintersport-theme'
+            },
             default: {
                 name: 'Default',
                 months: [],
@@ -198,7 +229,7 @@ class FestivityManager {
 
     applyTheme() {
         // Remove existing theme classes
-        document.body.classList.remove('oeteldonk-theme', 'halloween-theme', 'christmas-theme', 'default-theme');
+        document.body.classList.remove('oeteldonk-theme', 'halloween-theme', 'christmas-theme', 'wintersport-theme', 'default-theme');
 
         // Add current theme class
         document.body.classList.add(this.getCssClass());
@@ -216,6 +247,100 @@ class FestivityManager {
 
         // Update background audio
         this.updateBackgroundAudio();
+
+        // Handle snowfall effect for wintersport theme
+        this.updateSnowfall();
+
+    }
+
+    // Snowfall effect for wintersport theme
+    updateSnowfall() {
+        // Remove existing snowflakes
+        document.querySelectorAll('.snowflake').forEach(el => el.remove());
+        if (this.snowInterval) {
+            clearInterval(this.snowInterval);
+            this.snowInterval = null;
+        }
+
+        if (this.currentTheme !== 'wintersport') return;
+
+        const maxFlakes = 40;
+        let activeFlakes = 0;
+
+        const createSnowflakeSVG = (size) => {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 64 64');
+            svg.setAttribute('width', size);
+            svg.setAttribute('height', size);
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('stroke', '#fff');
+            g.setAttribute('stroke-width', '3');
+            g.setAttribute('stroke-linecap', 'round');
+            g.setAttribute('fill', 'none');
+            // 6 arms
+            for (let i = 0; i < 6; i++) {
+                const angle = i * 60;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', '32'); line.setAttribute('y1', '32');
+                const rad = angle * Math.PI / 180;
+                line.setAttribute('x2', 32 + Math.cos(rad) * 28);
+                line.setAttribute('y2', 32 + Math.sin(rad) * 28);
+                g.appendChild(line);
+                // branches
+                const bRad1 = (angle + 30) * Math.PI / 180;
+                const bRad2 = (angle - 30) * Math.PI / 180;
+                const mx = 32 + Math.cos(rad) * 16;
+                const my = 32 + Math.sin(rad) * 16;
+                const branch1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                branch1.setAttribute('x1', mx); branch1.setAttribute('y1', my);
+                branch1.setAttribute('x2', mx + Math.cos(bRad1) * 10);
+                branch1.setAttribute('y2', my + Math.sin(bRad1) * 10);
+                const branch2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                branch2.setAttribute('x1', mx); branch2.setAttribute('y1', my);
+                branch2.setAttribute('x2', mx + Math.cos(bRad2) * 10);
+                branch2.setAttribute('y2', my + Math.sin(bRad2) * 10);
+                g.appendChild(branch1);
+                g.appendChild(branch2);
+            }
+            svg.appendChild(g);
+            return svg;
+        };
+
+        const spawnFlake = () => {
+            if (activeFlakes >= maxFlakes) return;
+
+            const flake = document.createElement('div');
+            flake.classList.add('snowflake');
+
+            const size = Math.random() * 30 + 20; // 20px - 50px
+            const left = Math.random() * 100;
+            const fallDuration = Math.random() * 6 + 5; // 5-11s
+            const swayDuration = Math.random() * 4 + 3; // 3-7s
+            const opacity = Math.random() * 0.4 + 0.4; // 0.4-0.8
+
+            flake.appendChild(createSnowflakeSVG(size));
+            flake.style.left = left + 'vw';
+            flake.style.opacity = opacity;
+            flake.style.animationDuration = fallDuration + 's, ' + swayDuration + 's';
+            flake.style.animationDelay = '0s, ' + (Math.random() * 2) + 's';
+
+            document.body.appendChild(flake);
+            activeFlakes++;
+
+            // Remove after animation completes
+            setTimeout(() => {
+                flake.remove();
+                activeFlakes--;
+            }, fallDuration * 1000);
+        };
+
+        // Spawn initial batch
+        for (let i = 0; i < 15; i++) {
+            setTimeout(spawnFlake, Math.random() * 2000);
+        }
+
+        // Keep spawning
+        this.snowInterval = setInterval(spawnFlake, 300);
     }
 
     // Get background audio source for current theme (with fallback to default)
@@ -293,9 +418,13 @@ class FestivityManager {
             video.volume = 0;
         });
 
-        // Update cart icon
-        if (elements.cartIcon && !window.timeManager.isPartyTime()) {
-            this.updateImageWithFallback(elements.cartIcon, theme.icon, 'assets/default-mode/empty_cart.png');
+        // Update cart icon (both empty and full cart depending on party time)
+        if (elements.cartIcon) {
+            if (window.timeManager.isPartyTime()) {
+                this.updateImageWithFallback(elements.cartIcon, theme.fullCart, 'assets/default-mode/full_cart.jpg');
+            } else {
+                this.updateImageWithFallback(elements.cartIcon, theme.icon, 'assets/default-mode/empty_cart.png');
+            }
         }
 
         // Ensure ALL videos on page are muted (audio comes from backgroundAudio)
@@ -447,6 +576,12 @@ class FestivityManager {
             // Force coin cursor to refresh its images
             if (window.coinCursor) {
                 window.coinCursor.updateImages();
+            }
+
+            // Force time display to refresh with new theme's icons
+            if (window.timeManager) {
+                window.timeManager.lastState = null;
+                window.timeManager.notifySubscribers();
             }
 
             // Update toggle button visibility
