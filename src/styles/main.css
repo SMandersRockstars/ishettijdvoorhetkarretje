@@ -301,6 +301,32 @@ video {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* Wintersport snowflake styles */
+.snowflake {
+    position: fixed;
+    top: -60px;
+    pointer-events: none;
+    z-index: 9998;
+    color: #fff;
+    font-size: 24px;
+    text-shadow: 0 0 8px rgba(255,255,255,0.8);
+    animation: snowflake-fall linear infinite, snowflake-sway ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes snowflake-fall {
+    0% { top: -60px; opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 105vh; opacity: 0.3; }
+}
+
+@keyframes snowflake-sway {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(30px) rotate(90deg); }
+    50% { transform: translateX(-20px) rotate(180deg); }
+    75% { transform: translateX(25px) rotate(270deg); }
+}
+
 /* Toggle Festive Button - moved from inline styles for better performance */
 .toggle-festive-btn {
     background: linear-gradient(45deg, #ff6b35, #f7931e);
