@@ -271,6 +271,36 @@ video {
     text-shadow: 1px 1px 2px #000;
 }
 
+/* Wintersport Theme Styles - Ice blue, snow white, mountain vibes */
+.wintersport-theme {
+    background: linear-gradient(135deg, #0a2463 0%, #1a73b5 40%, #87CEEB 70%, #e8f4fd 100%);
+    color: #ffffff;
+}
+
+.wintersport-theme .yes {
+    background: linear-gradient(45deg, #00b4d8, #48cae4, #90e0ef);
+    box-shadow: 0 0 25px rgba(0, 180, 216, 0.6), 0 0 50px rgba(144, 224, 239, 0.3);
+}
+
+.wintersport-theme .no {
+    background: linear-gradient(45deg, #1a73b5, #2196F3);
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+}
+
+.wintersport-theme .icon {
+    filter: drop-shadow(0 0 10px rgba(144, 224, 239, 0.8));
+}
+
+.wintersport-theme .message {
+    text-shadow: 2px 2px 4px rgba(10, 36, 99, 0.8);
+    font-weight: bold;
+}
+
+.wintersport-theme #waiting-content p {
+    color: #e0f0ff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Toggle Festive Button - moved from inline styles for better performance */
 .toggle-festive-btn {
     background: linear-gradient(45deg, #ff6b35, #f7931e);

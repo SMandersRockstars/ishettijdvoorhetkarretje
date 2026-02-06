@@ -99,6 +99,37 @@ class FestivityManager {
                 fullCart: 'assets/christmas-mode/christmas-full-cart.jpg',
                 cssClass: 'christmas-theme'
             },
+            wintersport: {
+                name: 'Wintersport',
+                months: [3], // March - Ski season
+                coinImages: [
+                    'assets/wintersport-mode/ski-coin.svg',
+                    'assets/wintersport-mode/snowboard-coin.svg',
+                    'assets/wintersport-mode/gondel-coin.svg',
+                    'assets/wintersport-mode/snowflake-coin.svg'
+                ],
+                gifs: {
+                    beer: 'assets/default-mode/beer-drinking.gif',
+                    cat: 'assets/default-mode/cat.gif',
+                    fish: 'assets/default-mode/fish.mp4'
+                },
+                videos: {
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    init: 'assets/default-mode/fish.mp4'
+                },
+                audio: {
+                    background: 'assets/default-mode/fish-music.mp3'
+                },
+                partyImages: [
+                    'assets/default-mode/heineken.png',
+                    'assets/default-mode/hertog_jan.png',
+                    'assets/default-mode/lays.png',
+                    'assets/default-mode/boonekamp.png'
+                ],
+                icon: 'assets/default-mode/empty_cart.png',
+                fullCart: 'assets/default-mode/full_cart.jpg',
+                cssClass: 'wintersport-theme'
+            },
             default: {
                 name: 'Default',
                 months: [],
@@ -198,7 +229,7 @@ class FestivityManager {
 
     applyTheme() {
         // Remove existing theme classes
-        document.body.classList.remove('oeteldonk-theme', 'halloween-theme', 'christmas-theme', 'default-theme');
+        document.body.classList.remove('oeteldonk-theme', 'halloween-theme', 'christmas-theme', 'wintersport-theme', 'default-theme');
 
         // Add current theme class
         document.body.classList.add(this.getCssClass());
