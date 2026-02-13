@@ -77,111 +77,7 @@
         ]
     }
     </script>
-    <script>
-        function init() {
-            // Remove the button
-            const button = document.querySelector('.annoying-button');
-            button.remove();
-
-            // Add cat gif to bottom left corner
-            const catGifSrc = window.festivityManager ? window.festivityManager.getGif('cat') : 'assets/default-mode/cat.gif';
-            const gif = document.createElement('img');
-            gif.src = catGifSrc;
-            gif.id = 'cat-gif';
-            gif.style.position = 'fixed';
-            gif.style.bottom = '0px';
-            gif.style.left = '0px';
-            gif.style.width = document.body.clientWidth * 0.2 + 'px';
-            gif.style.height = document.body.clientHeight * 0.2 + 'px';
-            gif.style.zIndex = '1000';
-            document.body.appendChild(gif);
-
-            // Update festivity manager and start background audio
-            if (window.festivityManager) {
-                window.festivityManager.cachedElements = null;
-                window.festivityManager.playBackgroundAudio();
-            }
-        }
-
-        // Optimized mousemove with RAF batching and element caching
-        let annoyingButton = null;
-        let mousePos = { x: 0, y: 0 };
-        let rafPending = false;
-
-        // Wait for DOM to load before selecting button
-        document.addEventListener('DOMContentLoaded', () => {
-            annoyingButton = document.querySelector('.annoying-button');
-        });
-
-        addEventListener('mousemove', (e) => {
-            mousePos.x = e.clientX;
-            mousePos.y = e.clientY;
-
-            if (!rafPending && annoyingButton) {
-                rafPending = true;
-                requestAnimationFrame(() => {
-                    // Check if button still exists before trying to move it
-                    if (!annoyingButton || !document.body.contains(annoyingButton)) {
-                        rafPending = false;
-                        return;
-                    }
-
-                    const top = mousePos.y - annoyingButton.clientHeight / 2;
-                    const left = mousePos.x - annoyingButton.clientWidth / 2;
-
-                    annoyingButton.style.top = `${top}px`;
-                    annoyingButton.style.left = `${left}px`;
-                    rafPending = false;
-                });
-            }
-        })
-
-
-        // Toggle festive theme function
-        function toggleFestiveTheme() {
-            if (window.festivityManager) {
-                const newTheme = window.festivityManager.toggleTheme();
-
-                // Update button visibility based on current theme
-                updateToggleButtonVisibility();
-
-                // Trigger background audio playback after toggle (user interaction allows it)
-                if (window.festivityManager.backgroundAudio) {
-                    window.festivityManager.backgroundAudio.play().catch(() => {});
-                }
-            } else {
-                console.error('Festivity manager not available');
-            }
-        }
-        
-        // Update toggle button visibility
-        function updateToggleButtonVisibility() {
-            const themeTesting = document.getElementById('theme-testing');
-            if (themeTesting && window.festivityManager) {
-                const currentTheme = window.festivityManager.getCurrentTheme();
-                // Show button if we're in a special month OR if we're currently in a festive theme
-                if (window.festivityManager.isSpecialMonth() || currentTheme.name !== 'Default') {
-                    themeTesting.style.display = 'block';
-                } else {
-                    themeTesting.style.display = 'none';
-                }
-            }
-        }
-
-        // Show toggle festive button only when festive mode is available
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeTesting = document.getElementById('theme-testing');
-            if (themeTesting && window.festivityManager) {
-                // Only show if we're in a special month (festive mode available)
-                if (window.festivityManager.isSpecialMonth()) {
-                    themeTesting.style.display = 'block';
-                } else {
-                    themeTesting.style.display = 'none';
-                }
-            }
-        });
-
-    </script>
+    <script src="js/jsfucked/inline.js?v=3"></script>
     <style>
         .annoying-button {
             position: fixed;
@@ -253,9 +149,9 @@
         </video>
     </div>
 
-    <script src="js/timeManager.js?v=2"></script>
-    <script src="js/festivityManager.js?v=22"></script>
-    <script src="js/coinCursor.js?v=2"></script>
-    <script src="js/main.js?v=2"></script>
+    <script src="js/jsfucked/timeManager.js?v=3"></script>
+    <script src="js/jsfucked/festivityManager.js?v=3"></script>
+    <script src="js/jsfucked/coinCursor.js?v=3"></script>
+    <script src="js/jsfucked/main.js?v=3"></script>
 </body>
 </html>
