@@ -1,0 +1,6 @@
+{
+  "defaultPartyTime": { "hour": 16, "minute": 0 },
+  "overrides": [
+    { "date": "2026-02-13", "hour": 15, "minute": 30, "reason": "Carnaval vrijmibo" }
+  ]
+}

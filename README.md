@@ -11,6 +11,7 @@ We've successfully refactored the codebase into a clean, maintainable structure 
 ```
 src/
 ├── index.html          # Main HTML file
+├── config.json         # Party time defaults and date overrides
 ├── styles/
 │   └── main.css        # All styles separated
 ├── js/
@@ -41,6 +42,21 @@ Then visit `http://localhost:6969`
 - **Better Organization**: Logical file structure
 - **Maintainable Code**: Easy to understand and modify
 - **Development Server**: Simple local development setup
+
+### ⏰ Time Overrides
+
+Party time defaults to Friday 16:00. To change the time for a specific date (e.g. Carnaval), edit `src/config.json`:
+
+```json
+{
+  "defaultPartyTime": { "hour": 16, "minute": 0 },
+  "overrides": [
+    { "date": "2026-02-13", "hour": 15, "minute": 30, "reason": "Carnaval vrijmibo" }
+  ]
+}
+```
+
+Add entries to `overrides` with a `YYYY-MM-DD` date to set a custom start time for that Friday. If the config can't be loaded, it falls back to 16:00.
 
 ### 🧪 Testing
 
