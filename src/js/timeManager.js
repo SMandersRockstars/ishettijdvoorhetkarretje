@@ -18,7 +18,10 @@ class TimeManager {
         const minute = now.getMinutes();
 
         // Check if it's Friday after 16:00 OR before 00:00 on Saturday
-        return (day === 5 && hour > 15) || (day === 6 && hour < 0);
+        // Carnaval vrijmibo: 15:30 on 2026-02-13
+        const isToday = now.getFullYear() === 2026 && now.getMonth() === 1 && now.getDate() === 13;
+        const partyHour = isToday ? (hour > 15 || (hour === 15 && minute >= 30)) : hour > 15;
+        return (day === 5 && partyHour) || (day === 6 && hour < 0);
     }
 
     getNextPartyTime() {
@@ -32,13 +35,15 @@ class TimeManager {
         // Find the next Friday 16:00
         const day = now.getDay();
         let daysUntilFriday = (5 - day + 7) % 7;
-        
+
         if (day === 6) {
             daysUntilFriday = 6; // If it's Saturday, next Friday is in 6 days
         }
-        
+
         targetTime.setDate(targetTime.getDate() + daysUntilFriday);
-        targetTime.setHours(16, 0, 0, 0);
+        // Carnaval vrijmibo: 15:30 on 2026-02-13
+        const isToday = now.getFullYear() === 2026 && now.getMonth() === 1 && now.getDate() === 13;
+        targetTime.setHours(isToday && daysUntilFriday === 0 ? 15 : 16, isToday && daysUntilFriday === 0 ? 30 : 0, 0, 0);
         
         return targetTime;
     }
