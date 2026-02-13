@@ -45,6 +45,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (this.elements.waitingContent) {
                 this.elements.waitingContent.style.display = state.isPartyTime ? 'none' : 'block';
             }
+            const waitingText = document.getElementById('waiting-text');
+            if (waitingText && !state.isPartyTime) {
+                const nextParty = window.timeManager.getNextPartyTime();
+                const timeStr = `${String(nextParty.getHours()).padStart(2, '0')}:${String(nextParty.getMinutes()).padStart(2, '0')}`;
+                waitingText.textContent = `Speel Karretje the game!!!!! terwijl je wacht tot het vrijdag ${timeStr} is!`;
+            }
             this.elements.beerDrinkingGif.style.display = state.isPartyTime ? 'block' : 'none';
         },
 
