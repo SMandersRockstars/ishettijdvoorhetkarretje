@@ -1,5 +1,5 @@
 // Main Application - Initializes and coordinates all components
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Video optimization with Intersection Observer
     const videoObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     timeDisplay.initialize();
     window.coinCursor.initialize();
     
-    // Start the time updates
+    // Load config and start the time updates
+    await window.timeManager.loadConfig();
     window.timeManager.startUpdates();
 }); 
