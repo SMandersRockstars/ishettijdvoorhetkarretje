@@ -8,8 +8,35 @@ on:
 
 jobs:
 
-  build:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check config.json exists
+      run: test -f src/config.json
+    - name: Validate config.json schema
+      run: |
+        node -e "
+          const config = require('./src/config.json');
+          const errors = [];
+          if (!config.defaultPartyTime || typeof config.defaultPartyTime.hour !== 'number' || typeof config.defaultPartyTime.minute !== 'number') {
+            errors.push('defaultPartyTime must have numeric hour and minute');
+          }
+          if (!Array.isArray(config.overrides)) {
+            errors.push('overrides must be an array');
+          } else {
+            config.overrides.forEach((o, i) => {
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(o.date)) errors.push('overrides[' + i + '].date must be YYYY-MM-DD');
+              if (typeof o.hour !== 'number') errors.push('overrides[' + i + '].hour must be a number');
+              if (typeof o.minute !== 'number') errors.push('overrides[' + i + '].minute must be a number');
+            });
+          }
+          if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
+          console.log('config.json is valid');
+        "
 
+  build:
+    needs: validate-config
     runs-on: ubuntu-latest
 
     steps:
