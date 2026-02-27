@@ -349,3 +349,82 @@ video {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    body {
+        font-size: 1em;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .side {
+        width: 22%;
+    }
+
+    .center {
+        width: 56%;
+        height: 100vh;
+        flex-direction: column;
+    }
+
+    .fish {
+        flex: 1;
+        min-height: 60px;
+        max-height: 25vh;
+    }
+
+    .content {
+        padding: 12px;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+    }
+
+    .icon {
+        width: 8em;
+        margin-bottom: 0.4em;
+    }
+
+    #remaining-time {
+        font-size: 0.7em;
+    }
+
+    .toggle-festive-btn {
+        font-size: 12px;
+        padding: 7px 12px;
+        letter-spacing: 0;
+    }
+
+    #theme-testing {
+        bottom: 12px !important;
+        top: auto !important;
+        right: 12px !important;
+    }
+
+    .annoying-button {
+        font-size: 1em !important;
+        max-width: 60vw;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.2;
+        padding: 7px 12px;
+    }
+
+    .game-link img {
+        width: 50px;
+    }
+
+    #beer-drinking-gif {
+        max-width: 45vw;
+        max-height: 28vh;
+        margin-top: 12px;
+    }
+
+    #waiting-content p {
+        font-size: 0.55em;
+        margin-bottom: 4px;
+    }
+}
