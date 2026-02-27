@@ -35,6 +35,8 @@ video {
 
 .fish {
     height: 20%;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
 .center {
@@ -49,7 +51,6 @@ video {
 
 .content {
     padding: 20px;
-    height: 60%;
 }
 
 .icon {

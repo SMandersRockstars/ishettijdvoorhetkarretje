@@ -62,15 +62,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // Initialize and apply festivity theme first
+    // Initialize time display first so it receives the update from setTheme below
+    timeDisplay.initialize();
+
+    // Apply festivity theme (calls notifySubscribers, which now has a registered callback)
     if (window.festivityManager) {
         // Auto-apply theme based on current month
         const monthTheme = window.festivityManager.detectCurrentTheme();
         window.festivityManager.setTheme(monthTheme);
     }
-    
-    // Initialize components
-    timeDisplay.initialize();
+
+    // Initialize remaining components
     window.coinCursor.initialize();
     
     // Load config and start the time updates

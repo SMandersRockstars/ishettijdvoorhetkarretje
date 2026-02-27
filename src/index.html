@@ -197,7 +197,7 @@
         }
     </style>
 
-    <link rel="stylesheet" href="styles/main.css?v=4">
+    <link rel="stylesheet" href="styles/main.css?v=6">
 </head>
 <body>
     <button class="annoying-button" style="font-size: 2em" onclick="init()">Klik hier voor de volledige ervaring</button>
@@ -210,7 +210,8 @@
     </div>
     <div class="side">
         <video autoplay loop muted playsinline preload="metadata" class="lazy-video">
-            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
+            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_vp9.webm" type="video/webm">
+            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
@@ -227,7 +228,7 @@
             <img class="icon" id="icon" src="assets/default-mode/empty_cart.png" alt="Cart Icon">
             <div id="message" class="message"></div>
             <p id="remaining-time"></p>
-            <img id="beer-drinking-gif" src="assets/default-mode/beer-drinking.gif" alt="Beer drinking animation" style="position: relative; display: block; margin: 0 auto;">
+            <img id="beer-drinking-gif" src="assets/default-mode/beer-drinking.gif" alt="Beer drinking animation" style="position: relative; display: none; margin: 0 auto;">
 
             <!-- Game link - only visible when NOT party time -->
             <div id="waiting-content" style="display: none;">
@@ -248,14 +249,15 @@
 
     <div class="side">
         <video autoplay loop muted playsinline preload="metadata" class="lazy-video">
-            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4" type="video/mp4">
+            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_vp9.webm" type="video/webm">
+            <source src="assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
     <script src="js/timeManager.js?v=2"></script>
-    <script src="js/festivityManager.js?v=22"></script>
+    <script src="js/festivityManager.js?v=23"></script>
     <script src="js/coinCursor.js?v=2"></script>
-    <script src="js/main.js?v=2"></script>
+    <script src="js/main.js?v=3"></script>
 </body>
 </html>
