@@ -21,7 +21,7 @@ class FestivityManager {
                     fish: 'assets/default-mode/fish.mp4'
                 },
                 videos: {
-                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
                     init: 'assets/default-mode/fish.mp4'
                 },
                 audio: {
@@ -52,7 +52,7 @@ class FestivityManager {
                     fish: 'assets/default-mode/fish.mp4'
                 },
                 videos: {
-                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
                     init: 'assets/spooktober-mode/halloween-init.mp4'
                 },
                 audio: {
@@ -114,7 +114,7 @@ class FestivityManager {
                     fish: 'assets/default-mode/fish.mp4'
                 },
                 videos: {
-                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
                     init: 'assets/default-mode/fish.mp4'
                 },
                 audio: {
@@ -140,7 +140,7 @@ class FestivityManager {
                     fish: 'assets/default-mode/fish.mp4'
                 },
                 videos: {
-                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4',
+                    subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
                     init: 'assets/default-mode/fish.mp4'
                 },
                 audio: {
@@ -220,7 +220,6 @@ class FestivityManager {
                 beerGif: document.getElementById('beer-drinking-gif'),
                 catGif: document.getElementById('cat-gif') || document.querySelector('img[src*="cat.gif"]'),
                 fishElements: allFishElements,
-                subwayVideos: document.querySelectorAll('.side video source'),
                 cartIcon: document.getElementById('icon')
             };
         }
@@ -407,9 +406,9 @@ class FestivityManager {
             video.muted = true;
         });
 
-        // Update subway surfers videos (side panels) - handle both video and gif formats
-        elements.subwayVideos.forEach(videoSource => {
-            this.updateMediaElement(videoSource, theme.videos.subway, 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264.mp4');
+        // Update subway surfers videos (side panels) - update each video element once
+        document.querySelectorAll('.side video').forEach(video => {
+            this.updateSideVideo(video, theme.videos.subway);
         });
 
         // Double-check all subway videos are muted
@@ -443,6 +442,35 @@ class FestivityManager {
             imgElement.src = fallbackSrc;
             imgElement.onerror = null; // Prevent infinite loop
         };
+    }
+
+    updateSideVideo(video, newSrc) {
+        // Remove all existing sources to avoid multiple load() calls (one per source)
+        while (video.firstChild) {
+            video.removeChild(video.firstChild);
+        }
+
+        const isWebmSrc = newSrc.endsWith('.webm');
+
+        // For non-webm sources, also add a webm variant if one exists alongside it
+        if (!isWebmSrc) {
+            const webmSrc = newSrc.replace(/(_h264)?\.mp4$/, '_vp9.webm');
+            const webmSource = document.createElement('source');
+            webmSource.src = webmSrc;
+            webmSource.type = 'video/webm';
+            video.appendChild(webmSource);
+        }
+
+        const mp4Source = document.createElement('source');
+        mp4Source.src = newSrc;
+        mp4Source.type = isWebmSrc ? 'video/webm' : 'video/mp4';
+        video.appendChild(mp4Source);
+
+        video.muted = true;
+        video.load(); // Called exactly once per video
+        if (video.autoplay) {
+            video.play().catch(() => {});
+        }
     }
 
     updateVideoWithFallback(videoElement, newSrc, fallbackSrc) {
