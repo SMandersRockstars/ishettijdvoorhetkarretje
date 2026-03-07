@@ -1,11 +1,39 @@
+:root {
+    --bg-color: #000;
+    --text-color: #fff;
+    --remaining-time-color: #999;
+    --waiting-text-color: #ccc;
+    --video-brightness: 0.7;
+}
+
+[data-theme="light"] {
+    --bg-color: #f0f0f0;
+    --text-color: #111;
+    --remaining-time-color: #555;
+    --waiting-text-color: #444;
+    --video-brightness: 1;
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme]) {
+        --bg-color: #f0f0f0;
+        --text-color: #111;
+        --remaining-time-color: #555;
+        --waiting-text-color: #444;
+        --video-brightness: 1;
+    }
+}
+
 body {
     display: flex;
     font-family: Arial, sans-serif;
     text-align: center;
     margin: 0;
-    background-color: black;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     height: 100vh;
     font-size: 2em;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .yes {
@@ -31,6 +59,8 @@ video {
     object-fit: fill;
     height: 100%;
     position: relative;
+    filter: brightness(var(--video-brightness));
+    transition: filter 0.3s ease;
 }
 
 .fish {
@@ -87,7 +117,7 @@ video {
 
 #waiting-content p {
     margin: 0 0 10px 0;
-    color: #ccc;
+    color: var(--waiting-text-color);
     font-size: 0.7em;
 }
 
@@ -148,7 +178,7 @@ video {
 
 /* Remaining time text styles */
 #remaining-time {
-    color: #666;
+    color: var(--remaining-time-color);
     transition: color 0.3s ease;
 }
 
@@ -328,6 +358,28 @@ video {
     75% { transform: translateX(25px) rotate(270deg); }
 }
 
+/* Dark mode toggle button */
+.dark-mode-toggle {
+    background: none;
+    border: 2px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.dark-mode-toggle:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
 /* Toggle Festive Button - moved from inline styles for better performance */
 .toggle-festive-btn {
     background: linear-gradient(45deg, #ff6b35, #f7931e);
@@ -396,6 +448,12 @@ video {
         font-size: 12px;
         padding: 7px 12px;
         letter-spacing: 0;
+    }
+
+    .dark-mode-toggle {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
     }
 
     #theme-testing {

@@ -78,6 +78,44 @@
     }
     </script>
     <script>
+        // Dark mode logic
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            }
+        })();
+
+        function toggleDarkMode() {
+            const root = document.documentElement;
+            const current = root.getAttribute('data-theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            let next;
+
+            if (!current) {
+                // No explicit theme set — flip from system default
+                next = systemDark ? 'light' : 'dark';
+            } else {
+                next = current === 'dark' ? 'light' : 'dark';
+            }
+
+            root.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateDarkModeIcon();
+        }
+
+        function updateDarkModeIcon() {
+            const btn = document.getElementById('dark-mode-toggle');
+            if (!btn) return;
+            const theme = document.documentElement.getAttribute('data-theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = theme === 'dark' || (!theme && systemDark);
+            btn.textContent = isDark ? '☀️' : '🌙';
+            btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+        }
+
+        document.addEventListener('DOMContentLoaded', updateDarkModeIcon);
+
         function init() {
             // Remove the button
             const button = document.querySelector('.annoying-button');
@@ -202,6 +240,11 @@
 <body>
     <button class="annoying-button" style="font-size: 2em" onclick="init()">Klik hier voor de volledige ervaring</button>
     
+    <!-- Dark mode toggle -->
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 10000;">
+        <button id="dark-mode-toggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">🌙</button>
+    </div>
+
     <!-- Toggle Festive Mode Button -->
     <div id="theme-testing" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: none;">
         <button id="toggle-festive-btn" onclick="toggleFestiveTheme()" class="toggle-festive-btn">
