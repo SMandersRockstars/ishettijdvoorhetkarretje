@@ -5,7 +5,7 @@ import { useSnowfall } from './hooks/useSnowfall';
 import { AnnoyingButton } from './components/AnnoyingButton';
 import { CatGif } from './components/CatGif';
 import { ThemeToggle } from './components/ThemeToggle';
-import { SidePanel } from './components/SidePanel';
+import { SidePanel, SidePanelProvider } from './components/SidePanel';
 import { FishMedia } from './components/FishMedia';
 import { ContentArea } from './components/ContentArea';
 
@@ -20,13 +20,15 @@ function AppContent() {
     <>
       <AnnoyingButton />
       <ThemeToggle />
-      <SidePanel />
-      <div className="center">
-        <FishMedia />
-        <ContentArea />
-        <FishMedia />
-      </div>
-      <SidePanel />
+      <SidePanelProvider>
+        <SidePanel />
+        <div className="center">
+          <FishMedia />
+          <ContentArea />
+          <FishMedia />
+        </div>
+        <SidePanel />
+      </SidePanelProvider>
       <CatGif />
     </>
   );
