@@ -44,10 +44,12 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
   }, [theme, isPartyTime]);
 
   const startFly = useCallback(() => {
-    const start = getRandomEdgePosition(size);
+    // Clamp to 50% of the viewport so it fits on mobile
+    const effectiveSize = Math.min(size, window.innerWidth * 0.5);
+    const start = getRandomEdgePosition(effectiveSize);
     // Pick an exit side that differs from the entry side
     let end;
-    do { end = getRandomEdgePosition(size); } while (end.side === start.side);
+    do { end = getRandomEdgePosition(effectiveSize); } while (end.side === start.side);
 
     const duration = 2500 + Math.random() * 2000; // 2.5 – 4.5 s
 
@@ -56,7 +58,7 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
     const dy = end.numY - start.numY;
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-    setFly({ start, end, duration, angle, phase: 'start' });
+    setFly({ start, end, duration, angle, phase: 'start', effectiveSize });
   }, [size]);
 
   // Fire once shortly after mount, then every 20 seconds
@@ -175,7 +177,7 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
 
   if (!fly) return null;
 
-  const { start, end, duration, angle, phase } = fly;
+  const { start, end, duration, angle, phase, effectiveSize } = fly;
   const cssX = phase === 'fly' ? end.cssX : start.cssX;
   const cssY = phase === 'fly' ? end.cssY : start.cssY;
 
@@ -188,7 +190,7 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
         position: 'fixed',
         left: cssX,
         top: cssY,
-        width: `${size}px`,
+        width: `${effectiveSize}px`,
         height: 'auto',
         transform: `rotate(${angle}deg)`,
         transition: phase === 'fly'
