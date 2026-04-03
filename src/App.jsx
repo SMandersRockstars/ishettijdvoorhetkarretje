@@ -8,6 +8,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { SidePanel, SidePanelProvider } from './components/SidePanel';
 import { FishMedia } from './components/FishMedia';
 import { ContentArea } from './components/ContentArea';
+import { FlyingImage } from './components/FlyingImage';
 
 function AppContent() {
   const { theme, currentThemeKey } = useTheme();
@@ -30,6 +31,7 @@ function AppContent() {
         <SidePanel />
       </SidePanelProvider>
       <CatGif />
+      <FlyingImage />
     </>
   );
 }
