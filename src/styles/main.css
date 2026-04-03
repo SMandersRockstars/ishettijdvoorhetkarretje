@@ -1,11 +1,16 @@
 body {
-    display: flex;
     font-family: Arial, sans-serif;
     text-align: center;
     margin: 0;
     background-color: black;
     height: 100vh;
     font-size: 2em;
+}
+
+#root {
+    display: flex;
+    width: 100%;
+    height: 100vh;
 }
 
 .yes {
@@ -47,16 +52,17 @@ video {
     height: 100vh;
     vertical-align: top;
     z-index: 10;
+    overflow: hidden;
 }
 
 .content {
-    padding: 20px;
+    padding: 10px 20px;
 }
 
 .icon {
     border-radius: 10%;
-    width: 8em;
-    margin-bottom: 1em;
+    width: 5em;
+    margin-bottom: 0.5em;
 }
 
 .coin {
@@ -117,31 +123,32 @@ video {
 /* Beer drinking GIF styles */
 #beer-drinking-gif {
     max-width: 90vw;
+    max-height: 150px;
     height: auto;
-    margin-top: 30px;
+    margin-top: 15px;
     clear: both;
 }
 
 /* Media queries for beer drinking GIF to maximize at 300px when filling background */
 @media (min-width: 334px) {
     #beer-drinking-gif {
-        max-width: 300px;
-        max-height: 300px;
+        max-width: 200px;
+        max-height: 200px;
     }
 }
 
 @media (min-height: 334px) {
     #beer-drinking-gif {
-        max-width: 300px;
-        max-height: 300px;
+        max-width: 200px;
+        max-height: 200px;
     }
 }
 
-/* For larger screens, ensure it doesn't exceed 300px */
+/* For larger screens, ensure it doesn't exceed 200px */
 @media (min-width: 768px) and (min-height: 600px) {
     #beer-drinking-gif {
-        width: 300px;
-        height: 300px;
+        width: 200px;
+        height: 200px;
         object-fit: contain;
     }
 }
@@ -328,6 +335,20 @@ video {
     75% { transform: translateX(25px) rotate(270deg); }
 }
 
+/* Annoying Button */
+.annoying-button {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background-color: greenyellow;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
 /* Toggle Festive Button - moved from inline styles for better performance */
 .toggle-festive-btn {
     background: linear-gradient(45deg, #ff6b35, #f7931e);
@@ -358,6 +379,11 @@ video {
         overflow: hidden;
     }
 
+    #root {
+        height: 100vh;
+        overflow: hidden;
+    }
+
     .side {
         width: 22%;
     }
@@ -376,11 +402,9 @@ video {
 
     .content {
         padding: 12px;
-        flex: 0 0 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
-        overflow-y: auto;
     }
 
     .icon {
