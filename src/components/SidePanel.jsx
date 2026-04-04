@@ -51,7 +51,7 @@ export function SidePanelProvider({ children }) {
   return (
     <SharedVideoContext.Provider value={{ registerCanvas }}>
       {/* Hidden single source-of-truth video — decoded once, drawn to N canvases */}
-      <video ref={videoRef} autoPlay loop muted playsInline style={{ display: 'none' }}>
+      <video ref={videoRef} autoPlay loop muted playsInline style={{ position: 'fixed', top: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}>
         {theme.videos.subwayWebm && (
           <source src={theme.videos.subwayWebm} type="video/webm" />
         )}
