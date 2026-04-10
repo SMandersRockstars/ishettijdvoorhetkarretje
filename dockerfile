@@ -1,21 +1,36 @@
-FROM node:20-alpine AS build
+FROM node:20-alpine
 
 WORKDIR /app
+
+# Install nginx and supervisord to run both services
+RUN apk add --no-cache nginx supervisor
+
+# ===== Build Frontend (React/Vite) =====
 COPY package*.json ./
 RUN npm ci
-COPY . .
+COPY src ./src
+COPY index.html vite.config.js ./
 RUN npm run build
 
-FROM nginx:alpine
+# ===== Setup Backend =====
+COPY server/package*.json ./server/
+RUN cd server && npm ci
 
-# Copy custom nginx configuration
+COPY server ./server
+
+# ===== Configure Services =====
+
+# Copy nginx config (serves frontend + proxies /api to backend)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the Vite build output to the Nginx default HTML directory
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy supervisord config to run both services
+COPY supervisord.conf /etc/supervisor/conf.d/services.conf
 
-# Expose port 80 for HTTP traffic
+# Create log directories
+RUN mkdir -p /var/log/supervisor
+
+# Expose port 80
 EXPOSE 80
 
-# Start the Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Start supervisord (runs both services)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/services.conf"]
