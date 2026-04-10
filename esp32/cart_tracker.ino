@@ -224,15 +224,15 @@ void performLocationTracking() {
   float bestDistance = 999999.0;
 
   // Iterate through stored fingerprints and compare
-  for (JsonPair kv : fingerprints.as<JsonObject>()) {
+  for (JsonPair kv : fingerprints) {
     String zoneId = kv.key().c_str();
-    JsonObject zoneFingerprint = kv.value();
+    JsonObject zoneFingerprint = kv.value().as<JsonObject>();
 
     // Calculate Euclidean distance
     float distance = 0.0;
     int matchingAps = 0;
 
-    for (JsonPair apKv : zoneFingerprint.as<JsonObject>()) {
+    for (JsonPair apKv : zoneFingerprint) {
       String bssid = apKv.key().c_str();
       int storedRssi = apKv.value();
 
@@ -317,7 +317,7 @@ void fetchFingerprints() {
     if (!error) {
       printDebug("✅ Fingerprints fetched!");
       int zoneCount = 0;
-      for (JsonPair kv : fingerprints.as<JsonObject>()) {
+      for (JsonPair kv : fingerprints) {
         zoneCount++;
       }
       printDebug("   Found " + String(zoneCount) + " zones");
