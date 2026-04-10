@@ -40,3 +40,14 @@ pids
 *.pid
 *.seed
 *.pid.lock 
+# Server data (fingerprints, runtime state)
+server/data/*.json
+!server/data/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
