@@ -335,6 +335,62 @@ video {
     75% { transform: translateX(25px) rotate(270deg); }
 }
 
+/* -----------------------------------------------------------------------
+   COD Hitmarker
+   ----------------------------------------------------------------------- */
+.cod-hitmarker {
+  position: fixed;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  z-index: 99999;
+  animation: cod-hitmarker-anim 0.45s ease-out forwards;
+}
+
+.cod-hitmarker-arm {
+  position: absolute;
+  width: 52px;
+  height: 6px;
+  background: #ff2020;
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(255, 30, 30, 0.9), 0 0 22px rgba(255, 30, 30, 0.5);
+}
+
+/* Four diagonal arms radiating from each corner inward */
+.cod-hitmarker-tl {
+  top: 28px;
+  left: 6px;
+  transform: rotate(45deg);
+  transform-origin: right center;
+}
+
+.cod-hitmarker-tr {
+  top: 28px;
+  right: 6px;
+  transform: rotate(-45deg);
+  transform-origin: left center;
+}
+
+.cod-hitmarker-bl {
+  bottom: 28px;
+  left: 6px;
+  transform: rotate(-45deg);
+  transform-origin: right center;
+}
+
+.cod-hitmarker-br {
+  bottom: 28px;
+  right: 6px;
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+@keyframes cod-hitmarker-anim {
+  0%   { opacity: 1; transform: scale(1); }
+  25%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
 /* Annoying Button */
 .annoying-button {
     position: fixed;
