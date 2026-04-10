@@ -6,3 +6,18 @@ services:
       - "6969:80"
     volumes:
       - ./src:/usr/share/nginx/html
+    depends_on:
+      - server
+    environment:
+      - API_SERVER=server:3001
+
+  server:
+    build:
+      context: .
+      dockerfile: server.dockerfile
+    container_name: karretje-server
+    environment:
+      - PORT=3001
+      - API_KEY=${API_KEY:-dev-key-change-in-production}
+    expose:
+      - "3001"

@@ -1,0 +1,10 @@
+- generic [active] [ref=e1]:
+  - button "Klik hier voor de volledige ervaring" [ref=e2] [cursor=pointer]
+  - generic [ref=e4]: Your browser does not support the video tag.
+  - generic [ref=e5]:
+    - generic [ref=e7]: Your browser does not support the video tag.
+    - generic [ref=e8]:
+      - img "Cart Icon" [ref=e9]
+      - paragraph
+    - generic [ref=e11]: Your browser does not support the video tag.
+  - generic [ref=e13]: Your browser does not support the video tag.
