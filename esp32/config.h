@@ -5,8 +5,8 @@
 #define CONFIG_H
 
 // WiFi credentials
-#define WIFI_SSID "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+#define WIFI_SSID "changetowifissd"
+#define WIFI_PASSWORD "wifi_passwd"
 
 // Server settings
 #define SERVER_URL "http://192.168.1.100:3001" // Change to your server IP/domain
