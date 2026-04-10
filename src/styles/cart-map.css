@@ -1,0 +1,77 @@
+.cart-map-container {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin: 20px 0;
+  text-align: center;
+  color: white;
+}
+
+.cart-map-container h2 {
+  margin: 0 0 15px 0;
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+.cart-map-svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  background: white;
+  display: block;
+  margin: 0 auto 15px;
+}
+
+.zone-label {
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.cart-location-info {
+  margin-top: 10px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.location-unknown {
+  color: #999;
+  font-style: italic;
+  margin: 5px 0;
+}
+
+.location-zone {
+  margin: 5px 0;
+  color: #fff;
+}
+
+.location-zone strong {
+  color: #4caf50;
+}
+
+.location-updated {
+  font-size: 0.8em;
+  color: #999;
+  margin: 5px 0 0 0;
+}
+
+.location-updated time {
+  font-family: monospace;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cart-map-container {
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  .cart-map-container h2 {
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+
+  .location-updated {
+    font-size: 0.75em;
+  }
+}

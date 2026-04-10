@@ -1,5 +1,9 @@
 // Pure time utility functions — take config as a parameter so they remain testable
 
+export function isFriday(date = new Date()) {
+  return date.getDay() === 5;
+}
+
 export function getPartyTime(date, config) {
   const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   const override = (config.overrides || []).find((o) => o.date === dateStr);
