@@ -1,9 +1,60 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import maikeldekar from '../assets/maikeldekar.png';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTime } from '../contexts/TimeContext';
 
-const DEFAULT_IMAGE_SRC = maikeldekar;
+const DEFAULT_IMAGE_SRC = '/assets/maikeldekar.png';
+
+// ---------------------------------------------------------------------------
+// COD Hitmarker sound — generated via Web Audio API (no external file needed)
+// ---------------------------------------------------------------------------
+function playHitmarkerSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    const playTone = (startTime, freq, dur) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.18, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      osc.start(startTime);
+      osc.stop(startTime + dur);
+    };
+
+    // Two quick ticks — classic COD double-beep
+    playTone(ctx.currentTime, 900, 0.045);
+    playTone(ctx.currentTime + 0.06, 680, 0.04);
+
+    setTimeout(() => ctx.close(), 600);
+  } catch (_) { /* silently ignore */ }
+}
+
+// ---------------------------------------------------------------------------
+// COD Hitmarker visual — 4-arm red X that fades out
+// ---------------------------------------------------------------------------
+function showHitmarker(x, y) {
+  const size = 80;
+  const el = document.createElement('div');
+  el.className = 'cod-hitmarker';
+  el.style.left = `${x - size / 2}px`;
+  el.style.top  = `${y - size / 2}px`;
+
+  ['tl', 'tr', 'bl', 'br'].forEach((pos) => {
+    const arm = document.createElement('div');
+    arm.className = `cod-hitmarker-arm cod-hitmarker-${pos}`;
+    el.appendChild(arm);
+  });
+
+  document.body.appendChild(el);
+  setTimeout(() => {
+    if (document.body.contains(el)) document.body.removeChild(el);
+  }, 500);
+}
 
 const TRAIL_CONFIG = {
   throttleMs: 100,
@@ -88,6 +139,69 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
       return () => clearTimeout(timer);
     }
   }, [fly?.phase]);
+
+  // -------------------------------------------------------------------------
+  // Click → kill: capture current visual position, switch to 'dying' phase
+  // -------------------------------------------------------------------------
+  const handleClick = useCallback((e) => {
+    if (!fly || fly.phase !== 'fly' || !imgRef.current) return;
+    e.stopPropagation();
+
+    const rect = imgRef.current.getBoundingClientRect();
+    playHitmarkerSound();
+    showHitmarker(e.clientX, e.clientY);
+
+    setFly((prev) =>
+      prev
+        ? {
+            ...prev,
+            phase: 'dying',
+            posX: rect.left,
+            posY: rect.top,
+            velX: (Math.random() - 0.5) * 5,
+            velY: -4, // brief upward flick before gravity
+          }
+        : null,
+    );
+  }, [fly]);
+
+  // -------------------------------------------------------------------------
+  // Dying: gravity + spin animation driven by requestAnimationFrame
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (fly?.phase !== 'dying') return;
+
+    let posX     = fly.posX;
+    let posY     = fly.posY;
+    let velX     = fly.velX;
+    let velY     = fly.velY;
+    let rotation = fly.angle ?? 0;
+    let animId;
+
+    const loop = () => {
+      velY      += 0.65;           // gravity
+      posX      += velX;
+      posY      += velY;
+      rotation  += 9;              // tumble spin
+
+      if (imgRef.current) {
+        imgRef.current.style.left      = `${posX}px`;
+        imgRef.current.style.top       = `${posY}px`;
+        imgRef.current.style.transform = `rotate(${rotation}deg)`;
+        imgRef.current.style.transition = 'none';
+      }
+
+      if (posY > window.innerHeight + 250) {
+        setFly(null);
+        return;
+      }
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+    return () => { if (animId) cancelAnimationFrame(animId); };
+  }, [fly?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Particle trail while flying
   useEffect(() => {
@@ -178,6 +292,30 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
   if (!fly) return null;
 
   const { start, end, duration, angle, phase, effectiveSize } = fly;
+
+  // During dying phase, render at the captured pixel position with no transition;
+  // the RAF loop imperatively updates the DOM from here.
+  if (phase === 'dying') {
+    return (
+      <img
+        ref={imgRef}
+        src={src}
+        alt="Flying object"
+        style={{
+          position: 'fixed',
+          left: `${fly.posX}px`,
+          top: `${fly.posY}px`,
+          width: `${effectiveSize}px`,
+          height: 'auto',
+          transform: `rotate(${angle}deg)`,
+          transition: 'none',
+          zIndex: 9997,
+          pointerEvents: 'none',
+        }}
+      />
+    );
+  }
+
   const cssX = phase === 'fly' ? end.cssX : start.cssX;
   const cssY = phase === 'fly' ? end.cssY : start.cssY;
 
@@ -186,6 +324,9 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
       ref={imgRef}
       src={src}
       alt="Flying object"
+      draggable={false}
+      onClick={handleClick}
+      onMouseDown={(e) => e.preventDefault()}
       style={{
         position: 'fixed',
         left: cssX,
@@ -197,7 +338,10 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
           ? `left ${duration}ms linear, top ${duration}ms linear`
           : 'none',
         zIndex: 9997,
-        pointerEvents: 'none',
+        pointerEvents: phase === 'fly' ? 'auto' : 'none',
+        cursor: 'crosshair',
+        userSelect: 'none',
+        WebkitUserDrag: 'none',
       }}
     />
   );
