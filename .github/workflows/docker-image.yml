@@ -31,6 +31,19 @@ jobs:
               if (typeof o.minute !== 'number') errors.push('overrides[' + i + '].minute must be a number');
             });
           }
+          if (config.zones !== undefined) {
+            if (!Array.isArray(config.zones)) {
+              errors.push('zones must be an array');
+            } else {
+              config.zones.forEach((z, i) => {
+                if (typeof z.id !== 'string') errors.push('zones[' + i + '].id must be a string');
+                if (typeof z.label !== 'string') errors.push('zones[' + i + '].label must be a string');
+                ['x','y','w','h'].forEach(k => {
+                  if (typeof z[k] !== 'number') errors.push('zones[' + i + '].' + k + ' must be a number');
+                });
+              });
+            }
+          }
           if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
           console.log('config.json is valid');
         "
