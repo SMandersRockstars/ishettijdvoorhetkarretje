@@ -9,6 +9,7 @@ RUN apk add --no-cache nginx supervisor
 COPY package*.json ./
 RUN npm ci
 COPY src ./src
+COPY public ./public
 COPY index.html vite.config.js ./
 RUN npm run build
 

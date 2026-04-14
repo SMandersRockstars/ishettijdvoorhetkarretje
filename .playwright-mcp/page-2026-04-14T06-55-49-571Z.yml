@@ -1,0 +1,11 @@
+- generic [ref=e2]:
+  - button "Klik hier voor de volledige ervaring" [ref=e3] [cursor=pointer]
+  - generic [ref=e9]:
+    - img "Cart Icon" [ref=e10]
+    - generic [ref=e11]: NEE
+    - paragraph [ref=e12]: "Nog: 3d 7h 4m voordat het tijd is voor het karretje"
+    - generic [ref=e13]:
+      - paragraph [ref=e14]: Speel Karretje the game!!!!! terwijl je wacht tot het vrijdag 16:00 is!
+      - link "Karretje" [ref=e15] [cursor=pointer]:
+        - /url: ./karretje-the-game.html
+        - img "Karretje" [ref=e16]
