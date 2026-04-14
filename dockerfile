@@ -21,7 +21,10 @@ COPY server ./server
 # ===== Configure Services =====
 
 # Copy nginx config (serves frontend + proxies /api to backend)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy built frontend to nginx html directory
+RUN mkdir -p /usr/share/nginx/html && cp -r /app/dist/* /usr/share/nginx/html/
 
 # Copy supervisord config to run both services
 COPY supervisord.conf /etc/supervisor/conf.d/services.conf
