@@ -58,19 +58,20 @@ void setup() {
 }
 
 void loop() {
-  // Check if BOOT button is pressed (for manual calibration trigger)
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    printDebug("🔘 Button pressed!");
-    delay(500); // Debounce
-  }
-
   if (CALIBRATION_MODE) {
+    // In calibration mode: wait for button press, then scan and POST
+    printDebug("⏳ Waiting for button press to scan...");
+    while (digitalRead(BUTTON_PIN) == HIGH) {
+      delay(100); // Wait for button press
+    }
+    delay(50); // Debounce
+    printDebug("🔘 Button pressed! Scanning...");
     performCalibration();
+    // Don't sleep — go back to waiting for next button press
   } else {
     performLocationTracking();
+    sleepMode();
   }
-
-  sleepMode();
 }
 
 void connectToWiFi() {
@@ -139,20 +140,22 @@ void scanWiFiNetworks() {
 }
 
 void performCalibration() {
-  printDebug("\n📊 === CALIBRATION MODE ===");
-  printDebug("Scanning WiFi and sending to calibration API...");
+  printDebug("\n📊 === CALIBRATION SCAN ===");
 
   scanWiFiNetworks();
 
   if (networkCount == 0) {
-    printDebug("❌ No networks to calibrate");
-    sleepMode();
+    printDebug("❌ No networks found");
     return;
   }
 
-  // Create JSON payload
+  if (WiFi.status() != WL_CONNECTED) {
+    printDebug("❌ WiFi not connected");
+    return;
+  }
+
+  // Build JSON with raw readings — no zone, web UI assigns it
   StaticJsonDocument<4096> doc;
-  doc["zone"] = "test_zone"; // In real use, this would be passed or selected
   JsonArray readingsArray = doc.createNestedArray("readings");
 
   for (int i = 0; i < networkCount; i++) {
@@ -162,32 +165,27 @@ void performCalibration() {
     reading["rssi"] = networks[i].rssi;
   }
 
-  // Send to server
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    String url = String(SERVER_URL) + "/api/calibrate/scan";
-    http.begin(url);
-    http.addHeader("X-Api-Key", API_KEY);
-    http.addHeader("Content-Type", "application/json");
+  // POST raw scan to /api/calibrate/pending — zone assigned later via web UI
+  HTTPClient http;
+  String url = String(SERVER_URL) + "/api/calibrate/pending";
+  http.begin(url);
+  http.addHeader("X-Api-Key", API_KEY);
+  http.addHeader("Content-Type", "application/json");
 
-    String jsonString;
-    serializeJson(doc, jsonString);
+  String jsonString;
+  serializeJson(doc, jsonString);
 
-    printDebug("📤 POSTing to " + url);
-    int httpResponseCode = http.POST(jsonString);
+  printDebug("📤 POSTing scan to " + url);
+  int httpResponseCode = http.POST(jsonString);
 
-    if (httpResponseCode == 200) {
-      printDebug("✅ Calibration data sent! Response: " + String(httpResponseCode));
-    } else {
-      printDebug("❌ POST failed! Response: " + String(httpResponseCode));
-    }
-
-    http.end();
+  if (httpResponseCode == 200) {
+    printDebug("✅ Scan sent! Select the zone in the web UI.");
   } else {
-    printDebug("❌ WiFi not connected");
+    printDebug("❌ POST failed! Response: " + String(httpResponseCode));
   }
 
-  sleepMode();
+  http.end();
+  printDebug("Ready for next button press...\n");
 }
 
 void performLocationTracking() {

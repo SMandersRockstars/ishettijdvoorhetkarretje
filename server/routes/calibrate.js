@@ -6,39 +6,66 @@ const router = express.Router();
 // Structure: { zone_id: { bssid: rssi } }
 let fingerprints = {};
 
-// POST /api/calibrate/scan - ESP32 in calibration mode sends WiFi scan results
-router.post('/scan', (req, res) => {
+// Latest pending scan from ESP32 (no zone yet)
+let pendingScan = null;
+
+// POST /api/calibrate/pending - ESP32 posts raw WiFi scan, zone assigned later via web UI
+router.post('/pending', (req, res) => {
   const apiKey = req.get('X-Api-Key');
 
-  // Validate API key
   if (apiKey !== req.api_key) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { zone, readings } = req.body;
+  const { readings } = req.body;
 
-  // Basic validation
-  if (!zone || !readings || !Array.isArray(readings)) {
-    return res.status(400).json({ error: 'Missing or invalid zone/readings' });
+  if (!readings || !Array.isArray(readings)) {
+    return res.status(400).json({ error: 'Missing or invalid readings' });
   }
 
-  // Convert readings array to BSSID -> RSSI map
+  pendingScan = {
+    readings,
+    scannedAt: new Date().toISOString(),
+  };
+
+  console.log(`📡 Pending scan received from ESP32 (${readings.length} APs)`);
+  res.json({ success: true, ap_count: readings.length });
+});
+
+// GET /api/calibrate/pending - Web UI polls for latest ESP32 scan
+router.get('/pending', (req, res) => {
+  res.json(pendingScan || null);
+});
+
+// POST /api/calibrate/confirm - Web UI assigns a zone to the pending scan and saves it
+router.post('/confirm', (req, res) => {
+  const { zone } = req.body;
+
+  if (!zone) {
+    return res.status(400).json({ error: 'Missing zone' });
+  }
+
+  if (!pendingScan) {
+    return res.status(404).json({ error: 'No pending scan to confirm' });
+  }
+
+  // Convert readings to BSSID -> RSSI map
   const fingerprint = {};
-  readings.forEach((reading) => {
+  pendingScan.readings.forEach((reading) => {
     if (reading.bssid && reading.rssi !== undefined) {
       fingerprint[reading.bssid] = reading.rssi;
     }
   });
 
-  // Store fingerprint for this zone
   fingerprints[zone] = fingerprint;
+  const savedAps = Object.keys(fingerprint).length;
 
-  console.log(`🔍 Fingerprint captured for zone: ${zone} (${readings.length} APs)`);
-  res.json({
-    success: true,
-    zone,
-    ap_count: readings.length,
-  });
+  console.log(`✅ Fingerprint saved for zone: ${zone} (${savedAps} APs)`);
+
+  // Clear the pending scan
+  pendingScan = null;
+
+  res.json({ success: true, zone, ap_count: savedAps });
 });
 
 // GET /api/calibrate/fingerprints - Fetch all stored fingerprints
@@ -50,7 +77,6 @@ router.get('/fingerprints', (req, res) => {
 router.delete('/fingerprints/:zone', (req, res) => {
   const apiKey = req.get('X-Api-Key');
 
-  // Validate API key
   if (apiKey !== req.api_key) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
