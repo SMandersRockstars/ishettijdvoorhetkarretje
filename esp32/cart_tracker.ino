@@ -88,19 +88,54 @@ void syncTime() {
 }
 
 void scanWiFiNetworks() {
-  printDebug("Scanning WiFi networks...");
-  networkCount = WiFi.scanNetworks();
-  if (networkCount == 0) {
-    printDebug("No networks found");
-    return;
+  const int NUM_SCANS = 3;
+  const int RSSI_THRESHOLD = -85;
+
+  // Accumulate RSSI across multiple scans: bssid -> {total, count}
+  struct RssiAccum { char bssid[18]; char ssid[33]; long total; int count; };
+  RssiAccum accum[50];
+  int accumCount = 0;
+
+  printDebug("Scanning WiFi (" + String(NUM_SCANS) + "x averaged)...");
+
+  for (int scan = 0; scan < NUM_SCANS; scan++) {
+    int found = WiFi.scanNetworks();
+    for (int i = 0; i < found && i < 50; i++) {
+      int rssi = WiFi.RSSI(i);
+      if (rssi < RSSI_THRESHOLD) continue;
+      String bssid = WiFi.BSSIDstr(i);
+
+      // Find or add entry
+      int idx = -1;
+      for (int j = 0; j < accumCount; j++) {
+        if (String(accum[j].bssid) == bssid) { idx = j; break; }
+      }
+      if (idx == -1 && accumCount < 50) {
+        idx = accumCount++;
+        strcpy(accum[idx].bssid, bssid.c_str());
+        strcpy(accum[idx].ssid, WiFi.SSID(i).c_str());
+        accum[idx].total = 0;
+        accum[idx].count = 0;
+      }
+      if (idx != -1) {
+        accum[idx].total += rssi;
+        accum[idx].count++;
+      }
+    }
+    if (scan < NUM_SCANS - 1) delay(200);
   }
-  printDebug("Found " + String(networkCount) + " networks");
-  for (int i = 0; i < networkCount && i < 50; i++) {
-    networks[i].rssi = WiFi.RSSI(i);
-    strcpy(networks[i].bssid, WiFi.BSSIDstr(i).c_str());
-    strcpy(networks[i].ssid, WiFi.SSID(i).c_str());
-    printDebug("  " + String(networks[i].ssid) + " (" + String(networks[i].bssid) + ") RSSI: " + String(networks[i].rssi));
+
+  // Write averaged results into networks[]
+  networkCount = 0;
+  for (int i = 0; i < accumCount; i++) {
+    networks[networkCount].rssi = accum[i].total / accum[i].count;
+    strcpy(networks[networkCount].bssid, accum[i].bssid);
+    strcpy(networks[networkCount].ssid, accum[i].ssid);
+    printDebug("  " + String(networks[networkCount].ssid) + " (" + String(networks[networkCount].bssid) + ") RSSI: " + String(networks[networkCount].rssi));
+    networkCount++;
   }
+
+  printDebug("Scan complete: " + String(networkCount) + " APs (filtered + averaged)");
 }
 
 void performCalibration() {
