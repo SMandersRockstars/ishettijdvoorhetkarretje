@@ -56,20 +56,27 @@ function AppWithTime() {
 }
 
 export default function App() {
-  // Simple routing based on pathname
-  const isCalibrationPage = window.location.pathname === '/calibrate';
+  const path = window.location.pathname;
 
-  if (isCalibrationPage) {
+  if (path === '/calibrate') {
     return (
       <div style={{ backgroundColor: 'black', minHeight: '100vh', color: 'white', padding: '40px 20px' }}>
         <h1>🔧 WiFi Kalibratietool</h1>
         <CalibrationTool />
         <p style={{ marginTop: '30px', textAlign: 'center' }}>
-          <a href="/" style={{ color: '#4caf50', textDecoration: 'none' }}>
-            ← Terug naar karretje tracker
-          </a>
+          <a href="/" style={{ color: '#4caf50', textDecoration: 'none' }}>← Terug naar karretje tracker</a>
         </p>
       </div>
+    );
+  }
+
+  if (path === '/waarishetkarretje') {
+    return (
+      <CartLocationProvider>
+        <div style={{ backgroundColor: 'black', minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CartMap />
+        </div>
+      </CartLocationProvider>
     );
   }
 

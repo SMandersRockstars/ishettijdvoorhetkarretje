@@ -2,9 +2,11 @@
   padding: 20px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  margin: 20px 0;
+  margin: 20px auto;
   text-align: center;
   color: white;
+  width: 100%;
+  max-width: 500px;
 }
 
 .cart-map-container h2 {

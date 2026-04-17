@@ -1,0 +1,17 @@
+- generic [ref=e4]:
+  - heading "📍 Karretje Locatie" [level=2] [ref=e5]
+  - img [ref=e6]:
+    - generic [ref=e8]:
+      - generic: Keuken
+    - generic [ref=e10]:
+      - generic: Dev Kamer
+      - generic [ref=e12]: 🛒
+    - generic [ref=e13]:
+      - generic: Vergaderzaal
+  - generic [ref=e15]:
+    - paragraph [ref=e16]:
+      - text: Het karretje is in de
+      - strong [ref=e17]: Dev Kamer
+    - paragraph [ref=e18]:
+      - text: "Laatst bijgewerkt:"
+      - time [ref=e19]: 16:01:20
