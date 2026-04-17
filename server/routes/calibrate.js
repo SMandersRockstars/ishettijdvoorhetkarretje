@@ -1,12 +1,22 @@
 import express from 'express';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const router = express.Router();
 
-// In-memory store for fingerprints
-// Structure: { zone_id: { bssid: rssi } }
-let fingerprints = {};
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FINGERPRINTS_FILE = join(__dirname, '../data/fingerprints.json');
 
-// Latest pending scan from ESP32 (no zone yet)
+function readFingerprints() {
+  if (!existsSync(FINGERPRINTS_FILE)) return {};
+  return JSON.parse(readFileSync(FINGERPRINTS_FILE, 'utf8'));
+}
+
+function writeFingerprints(data) {
+  writeFileSync(FINGERPRINTS_FILE, JSON.stringify(data, null, 2));
+}
+
 let pendingScan = null;
 
 // POST /api/calibrate/pending - ESP32 posts raw WiFi scan, zone assigned later via web UI
@@ -49,7 +59,6 @@ router.post('/confirm', (req, res) => {
     return res.status(404).json({ error: 'No pending scan to confirm' });
   }
 
-  // Convert readings to BSSID -> RSSI map
   const fingerprint = {};
   pendingScan.readings.forEach((reading) => {
     if (reading.bssid && reading.rssi !== undefined) {
@@ -57,20 +66,20 @@ router.post('/confirm', (req, res) => {
     }
   });
 
+  const fingerprints = readFingerprints();
   fingerprints[zone] = fingerprint;
-  const savedAps = Object.keys(fingerprint).length;
+  writeFingerprints(fingerprints);
 
+  const savedAps = Object.keys(fingerprint).length;
   console.log(`✅ Fingerprint saved for zone: ${zone} (${savedAps} APs)`);
 
-  // Clear the pending scan
   pendingScan = null;
-
   res.json({ success: true, zone, ap_count: savedAps });
 });
 
 // GET /api/calibrate/fingerprints - Fetch all stored fingerprints
 router.get('/fingerprints', (req, res) => {
-  res.json(fingerprints);
+  res.json(readFingerprints());
 });
 
 // DELETE /api/calibrate/fingerprints/:zone - Remove a zone's fingerprint
@@ -82,10 +91,12 @@ router.delete('/fingerprints/:zone', (req, res) => {
   }
 
   const { zone } = req.params;
+  const fingerprints = readFingerprints();
   const existed = zone in fingerprints;
 
   if (existed) {
     delete fingerprints[zone];
+    writeFingerprints(fingerprints);
     console.log(`🗑️  Deleted fingerprint for zone: ${zone}`);
   }
 
