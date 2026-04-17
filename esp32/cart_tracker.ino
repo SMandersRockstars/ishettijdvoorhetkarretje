@@ -21,6 +21,8 @@ void scanWiFiNetworks();
 void performCalibration();
 void performLocationTracking();
 void postLocation(String zone);
+void fetchFingerprints();
+String getISOTimestamp();
 void sleepMode();
 void printDebug(String message);
 
