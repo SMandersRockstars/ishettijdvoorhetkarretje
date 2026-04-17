@@ -1,7 +1,24 @@
 import express from 'express';
 import cors from 'cors';
+import { existsSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import locationRoutes from './routes/location.js';
 import calibrateRoutes from './routes/calibrate.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Seed fingerprints from env var if file doesn't exist yet
+const FINGERPRINTS_FILE = join(__dirname, 'data/fingerprints.json');
+if (process.env.FINGERPRINTS_DATA && !existsSync(FINGERPRINTS_FILE)) {
+  try {
+    const data = Buffer.from(process.env.FINGERPRINTS_DATA, 'base64').toString('utf8');
+    writeFileSync(FINGERPRINTS_FILE, data);
+    console.log('📍 Fingerprints seeded from FINGERPRINTS_DATA env var');
+  } catch (e) {
+    console.error('Failed to seed fingerprints:', e.message);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
