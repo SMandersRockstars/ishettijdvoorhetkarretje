@@ -4,11 +4,10 @@
     { "date": "2026-02-13", "hour": 15, "minute": 30, "reason": "Carnaval vrijmibo" }
   ],
   "zones": [
-    { "id": "stiltehoek",      "label": "Stiltehoek",      "x": 0,  "y": 0,    "w": 50, "h": 33 },
-    { "id": "vrijdaghoek",     "label": "Vrijdaghoek",     "x": 50, "y": 0,    "w": 50, "h": 33 },
-    { "id": "recruitmentblok", "label": "Recruitmentblok", "x": 0,  "y": 33,   "w": 50, "h": 34 },
-    { "id": "saleshoek",       "label": "Saleshoek",       "x": 50, "y": 33,   "w": 50, "h": 34 },
-    { "id": "keuken",          "label": "Keuken",          "x": 0,  "y": 67,   "w": 50, "h": 33 },
-    { "id": "workcafe",        "label": "Workcafé",        "x": 50, "y": 67,   "w": 50, "h": 33 }
+    { "id": "workcafe",        "label": "Workcafé",        "x": 0,  "y": 0,  "w": 37, "h": 32 },
+    { "id": "stiltehoek",      "label": "Stiltehoek",      "x": 81, "y": 0,  "w": 19, "h": 29 },
+    { "id": "keuken",          "label": "Keuken",          "x": 14, "y": 40, "w": 35, "h": 45 },
+    { "id": "recruitmentblok", "label": "Recruitmentblok", "x": 0,  "y": 82, "w": 49, "h": 18 },
+    { "id": "saleshoek",       "label": "Saleshoek",       "x": 51, "y": 78, "w": 49, "h": 22 }
   ]
 }
