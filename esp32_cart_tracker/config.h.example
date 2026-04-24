@@ -1,0 +1,32 @@
+// Configuration for ESP32 Cart Tracker
+// Copy this file to config.h and fill in your values
+// config.h is gitignored — never commit it with real credentials
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// WiFi the ESP32 should connect to (must be same network as the server)
+#define WIFI_SSID "your-wifi-name"
+#define WIFI_PASSWORD "your-wifi-password"
+
+// Server URL — use the LAN IP of the machine running the server
+// On Windows: run ipconfig, look for the Wi-Fi IPv4 address
+#define SERVER_URL "http://192.168.x.x:3001"
+
+// Must match the API_KEY env var set on the server
+#define API_KEY "your-api-key"
+
+// NTP server for time sync
+#define NTP_SERVER "pool.ntp.org"
+
+// BOOT button pin (GPIO 0) — used in calibration mode
+#define BUTTON_PIN 0
+
+// Set to 1 for calibration mode, 0 for normal tracking
+#define CALIBRATION_MODE 0
+
+// How long to sleep between location updates (seconds)
+#define SLEEP_DURATION_FRIDAY 1800    // 30 minutes on Fridays
+#define SLEEP_DURATION_WEEKDAY 21600  // 6 hours on other days
+
+#endif
