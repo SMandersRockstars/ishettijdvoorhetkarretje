@@ -18,6 +18,7 @@ export function CartLocationProvider({ children }) {
         const response = await fetch('/api/location');
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
+        if (typeof data.zone !== 'string') data.zone = 'unknown';
         setLocation(data);
         setError(null);
       } catch (err) {
