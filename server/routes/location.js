@@ -29,8 +29,8 @@ router.post('/', (req, res) => {
 
   const { zone, timestamp } = req.body;
 
-  if (!zone) {
-    return res.status(400).json({ error: 'Missing zone field' });
+  if (!zone || typeof zone !== 'string') {
+    return res.status(400).json({ error: 'Missing or invalid zone field (must be a string)' });
   }
 
   const location = {
