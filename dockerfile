@@ -18,6 +18,7 @@ COPY server/package*.json ./server/
 RUN cd server && npm ci
 
 COPY server ./server
+RUN mkdir -p /app/server/data
 
 # ===== Configure Services =====
 
