@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔧 WiFi Kalibratietool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #111; color: #eee; font-family: system-ui, sans-serif; padding: 30px 20px; }
+    h1 { margin-bottom: 24px; font-size: 1.6em; }
+    h2 { font-size: 1.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+
+    .section {
+      background: rgba(0,0,0,0.4);
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 16px;
+      max-width: 720px;
+    }
+
+    .config-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .config-row label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85em; color: #aaa; flex: 1; min-width: 160px; }
+    input[type=text] {
+      padding: 8px 10px; background: #222; border: 1px solid #555; border-radius: 4px;
+      color: #eee; font-size: 0.95em; width: 100%;
+    }
+    input[type=text]:focus { outline: none; border-color: #4caf50; }
+
+    ol.instructions { padding-left: 20px; color: #bbb; line-height: 1.9; }
+
+    .polling { font-size: 0.75em; color: #4caf50; animation: pulse 1.5s infinite; font-weight: normal; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .waiting {
+      color: #888; font-style: italic; text-align: center;
+      border: 1px dashed #444; border-radius: 4px; padding: 20px;
+    }
+
+    .scan-meta { color: #bbb; font-size: 0.9em; margin-bottom: 10px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin-bottom: 12px; }
+    th { text-align: left; padding: 6px 10px; background: rgba(255,255,255,0.07); color: #aaa; font-weight: normal; }
+    td { padding: 6px 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+    code { font-family: monospace; color: #aaa; }
+    .strong { color: #4caf50; font-weight: bold; }
+    .medium { color: #ff9800; }
+    .weak   { color: #f44336; }
+
+    .confirm-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    select {
+      flex: 1; min-width: 180px; padding: 10px; background: #333; border: 1px solid #666;
+      border-radius: 4px; color: #eee; font-size: 0.95em; cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #4caf50; }
+
+    button.save {
+      padding: 10px 20px; background: #4caf50; color: white; border: none;
+      border-radius: 4px; cursor: pointer; font-size: 0.95em; font-weight: bold;
+      white-space: nowrap; transition: background .2s;
+    }
+    button.save:hover:not(:disabled) { background: #45a049; }
+    button.save:disabled { background: #555; cursor: not-allowed; }
+
+    .msg { margin-top: 12px; padding: 10px 14px; border-radius: 4px; font-size: 0.9em; }
+    .msg.success { background: rgba(76,175,80,.15); border-left: 3px solid #4caf50; }
+    .msg.error   { background: rgba(244,67,54,.15); border-left: 3px solid #f44336; }
+
+    ul.fingerprints { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    li.fp {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px; border-radius: 4px; background: rgba(255,255,255,0.04);
+      border-left: 3px solid #555;
+    }
+    li.fp.calibrated { border-left-color: #4caf50; }
+    li.fp.uncalibrated { opacity: 0.6; }
+    .fp-info { display: flex; flex-direction: column; gap: 3px; }
+    .ap-count { font-size: 0.8em; color: #888; }
+    button.del {
+      padding: 6px 10px; background: transparent; color: #f44336;
+      border: 1px solid #f44336; border-radius: 4px; cursor: pointer; font-size: 0.9em;
+      transition: background .2s;
+    }
+    button.del:hover { background: rgba(244,67,54,.15); }
+
+    @media (max-width:600px) {
+      .confirm-row { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 WiFi Kalibratietool</h1>
+
+  <div class="section">
+    <h2>⚙️ Verbinding</h2>
+    <div class="config-row">
+      <label>
+        Server URL
+        <input type="text" id="serverUrl" value="http://localhost:3001" placeholder="http://192.168.x.x:3001">
+      </label>
+      <label>
+        API Key
+        <input type="text" id="apiKey" value="dev-key-change-in-production" placeholder="API key">
+      </label>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Hoe werkt het?</h2>
+    <ol class="instructions">
+      <li>Ga naar een zone in het kantoor <strong>met de ESP32</strong></li>
+      <li>Druk op de knop op de ESP32 om een WiFi scan te starten</li>
+      <li>De scan verschijnt hieronder automatisch</li>
+      <li>Selecteer de zone en sla op</li>
+      <li>Herhaal voor alle zones</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2>📡 Laatste scan van ESP32 <span class="polling">● live</span></h2>
+    <div id="pendingScan"><p class="waiting">Wachten op scan van ESP32... Druk op de knop op het apparaat.</p></div>
+    <div id="message"></div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Opgeslagen kalibraties</h2>
+    <ul class="fingerprints" id="fingerprintsList"></ul>
+  </div>
+
+  <script>
+    const ZONES = [
+      { id: 'workcafe',        label: 'Workcafé' },
+      { id: 'stiltehoek',      label: 'Stiltehoek' },
+      { id: 'keuken',          label: 'Keuken' },
+      { id: 'recruitmentblok', label: 'Recruitmentblok' },
+      { id: 'saleshoek',       label: 'Saleshoek' },
+    ];
+
+    const serverUrl = () => document.getElementById('serverUrl').value.replace(/\/$/, '');
+    const apiKey    = () => document.getElementById('apiKey').value;
+
+    let fingerprints = {};
+
+    async function loadFingerprints() {
+      try {
+        const res = await fetch(`${serverUrl()}/api/calibrate/fingerprints`);
+        fingerprints = await res.json();
+        renderFingerprints();
+      } catch (e) {
+        console.error('Failed to load fingerprints:', e);
+      }
+    }
+
+    async function pollPending() {
+      try {
+        const res = await fetch(`${serverUrl()}/api/calibrate/pending`);
+        const data = await res.json();
+        renderPending(data);
+      } catch (e) {
+        console.error('Failed to poll:', e);
+      }
+    }
+
+    function renderPending(scan) {
+      const el = document.getElementById('pendingScan');
+      if (!scan) {
+        el.innerHTML = '<p class="waiting">Wachten op scan van ESP32... Druk op de knop op het apparaat.</p>';
+        return;
+      }
+
+      const rows = [...scan.readings]
+        .sort((a, b) => b.rssi - a.rssi)
+        .slice(0, 8)
+        .map(r => {
+          const cls = r.rssi > -60 ? 'strong' : r.rssi > -75 ? 'medium' : 'weak';
+          return `<tr>
+            <td>${r.ssid || '—'}</td>
+            <td><code>${r.bssid}</code></td>
+            <td class="${cls}">${r.rssi} dBm</td>
+          </tr>`;
+        }).join('');
+
+      const opts = ZONES.map(z => `<option value="${z.id}">${z.label}</option>`).join('');
+      const time = new Date(scan.scannedAt).toLocaleTimeString('nl-NL');
+
+      el.innerHTML = `
+        <p class="scan-meta">Ontvangen om ${time} — <strong>${scan.readings.length} netwerken gevonden</strong></p>
+        <table>
+          <thead><tr><th>SSID</th><th>BSSID</th><th>RSSI</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="confirm-row">
+          <select id="zoneSelect"><option value="">-- Welke zone is dit? --</option>${opts}</select>
+          <button class="save" onclick="confirmScan()">Opslaan voor deze zone</button>
+        </div>`;
+    }
+
+    async function confirmScan() {
+      const zone = document.getElementById('zoneSelect')?.value;
+      if (!zone) { showMessage('error', 'Selecteer eerst een zone'); return; }
+
+      const btn = document.querySelector('button.save');
+      btn.disabled = true;
+      btn.textContent = 'Opslaan...';
+
+      try {
+        const res = await fetch(`${serverUrl()}/api/calibrate/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zone }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const label = ZONES.find(z => z.id === zone)?.label || zone;
+          showMessage('success', `✅ Opgeslagen voor ${label} (${data.ap_count} APs)`);
+          renderPending(null);
+          loadFingerprints();
+        } else {
+          showMessage('error', '❌ Opslaan mislukt');
+          btn.disabled = false;
+          btn.textContent = 'Opslaan voor deze zone';
+        }
+      } catch (e) {
+        showMessage('error', '❌ Verbindingsfout');
+        btn.disabled = false;
+        btn.textContent = 'Opslaan voor deze zone';
+      }
+    }
+
+    async function deleteZone(zoneId) {
+      const label = ZONES.find(z => z.id === zoneId)?.label || zoneId;
+      if (!confirm(`Verwijder kalibratie voor "${label}"?`)) return;
+      try {
+        await fetch(`${serverUrl()}/api/calibrate/fingerprints/${zoneId}`, {
+          method: 'DELETE',
+          headers: { 'X-Api-Key': apiKey() },
+        });
+        showMessage('success', `🗑️ Kalibratie voor ${label} verwijderd`);
+        loadFingerprints();
+      } catch (e) {
+        showMessage('error', '❌ Verwijderen mislukt');
+      }
+    }
+
+    function renderFingerprints() {
+      const el = document.getElementById('fingerprintsList');
+      el.innerHTML = ZONES.map(zone => {
+        const fp = fingerprints[zone.id];
+        const apCount = fp ? Object.keys(fp).length : 0;
+        const cls = fp ? 'calibrated' : 'uncalibrated';
+        const status = fp ? `${apCount} APs opgeslagen ✅` : 'Nog niet gekalibreerd';
+        const delBtn = fp ? `<button class="del" onclick="deleteZone('${zone.id}')">🗑️</button>` : '';
+        return `<li class="fp ${cls}">
+          <div class="fp-info"><strong>${zone.label}</strong><span class="ap-count">${status}</span></div>
+          ${delBtn}
+        </li>`;
+      }).join('');
+    }
+
+    function showMessage(type, text) {
+      const el = document.getElementById('message');
+      el.innerHTML = `<p class="msg ${type}">${text}</p>`;
+      setTimeout(() => { el.innerHTML = ''; }, 5000);
+    }
+
+    loadFingerprints();
+    setInterval(pollPending, 2000);
+    pollPending();
+  </script>
+</body>
+</html>
