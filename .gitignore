@@ -51,3 +51,6 @@ server/data/*.json
 # Environment files
 .env
 .env.local
+
+# ESP32 config with secrets
+esp32_cart_tracker/config.h
