@@ -61,3 +61,4 @@ esp32_cart_tracker/config.h
 # Backup/scratch files
 fingerprints-BACKUP.json
 esp32_cart_tracker/config.example.h
+esp32_cart_tracker/cart_tracker/
