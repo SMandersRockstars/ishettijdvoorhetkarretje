@@ -54,3 +54,6 @@ server/data/*.json
 
 # ESP32 config with secrets
 esp32_cart_tracker/config.h
+
+# Playwright MCP artifacts
+.playwright-mcp/
