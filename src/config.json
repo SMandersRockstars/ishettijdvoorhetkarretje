@@ -2,5 +2,12 @@
   "defaultPartyTime": { "hour": 16, "minute": 0 },
   "overrides": [
     { "date": "2026-02-13", "hour": 15, "minute": 30, "reason": "Carnaval vrijmibo" }
+  ],
+  "zones": [
+    { "id": "workcafe",        "label": "Workcafé",        "x": 0,  "y": 0,  "w": 37, "h": 32 },
+    { "id": "stiltehoek",      "label": "Stiltehoek",      "x": 81, "y": 0,  "w": 19, "h": 29 },
+    { "id": "keuken",          "label": "Keuken",          "x": 14, "y": 40, "w": 35, "h": 45 },
+    { "id": "recruitmentblok", "label": "Recruitmentblok", "x": 0,  "y": 82, "w": 49, "h": 18 },
+    { "id": "saleshoek",       "label": "Saleshoek",       "x": 51, "y": 78, "w": 49, "h": 22 }
   ]
 }

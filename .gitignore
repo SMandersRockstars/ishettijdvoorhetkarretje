@@ -40,3 +40,25 @@ pids
 *.pid
 *.seed
 *.pid.lock 
+# Server data (fingerprints, runtime state)
+server/data/*.json
+!server/data/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
+
+# ESP32 config with secrets
+esp32_cart_tracker/config.h
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Backup/scratch files
+fingerprints-BACKUP.json
+esp32_cart_tracker/config.example.h
+esp32_cart_tracker/cart_tracker/
