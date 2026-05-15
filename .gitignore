@@ -57,3 +57,7 @@ esp32_cart_tracker/config.h
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Backup/scratch files
+fingerprints-BACKUP.json
+esp32_cart_tracker/config.example.h
