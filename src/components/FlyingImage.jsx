@@ -1,38 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTime } from '../contexts/TimeContext';
+import { useFlyingGame } from '../contexts/FlyingGameContext';
+import { useGameSounds } from '../hooks/useGameSounds';
 
 const DEFAULT_IMAGE_SRC = '/assets/maikeldekar.png';
-
-// ---------------------------------------------------------------------------
-// COD Hitmarker sound — generated via Web Audio API (no external file needed)
-// ---------------------------------------------------------------------------
-function playHitmarkerSound() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-
-    const playTone = (startTime, freq, dur) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, startTime);
-      gain.gain.setValueAtTime(0.18, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
-      osc.start(startTime);
-      osc.stop(startTime + dur);
-    };
-
-    // Two quick ticks — classic COD double-beep
-    playTone(ctx.currentTime, 900, 0.045);
-    playTone(ctx.currentTime + 0.06, 680, 0.04);
-
-    setTimeout(() => ctx.close(), 600);
-  } catch (_) { /* silently ignore */ }
-}
 
 // ---------------------------------------------------------------------------
 // COD Hitmarker visual — 4-arm red X that fades out
@@ -66,13 +38,9 @@ const TRAIL_CONFIG = {
   fadeOut: 400,
 };
 
-/**
- * Returns a position just outside one of the four screen edges.
- * cssX/cssY are CSS strings for left/top; numX/numY are numeric proxies for angle calculation.
- */
 function getRandomEdgePosition(size) {
-  const side = Math.floor(Math.random() * 4); // 0:left 1:right 2:top 3:bottom
-  const pos = 10 + Math.random() * 80;        // 10%–90% along the edge
+  const side = Math.floor(Math.random() * 4);
+  const pos = 10 + Math.random() * 80;
 
   switch (side) {
     case 0: return { cssX: `calc(-${size}px - 20px)`, cssY: `${pos}vh`, numX: -20, numY: pos, side };
@@ -83,48 +51,66 @@ function getRandomEdgePosition(size) {
   }
 }
 
-export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
+// ---------------------------------------------------------------------------
+// Single target instance — used both in casual mode and game mode
+// ---------------------------------------------------------------------------
+function FlyingTarget({
+  src = DEFAULT_IMAGE_SRC,
+  size = 400,
+  speedMultiplier = 1,
+  onHit,
+  onMiss,
+  targetId,
+}) {
   const [fly, setFly] = useState(null);
   const imgRef = useRef(null);
   const { theme } = useTheme();
   const { isPartyTime } = useTime();
   const themeRef = useRef({ theme, isPartyTime });
+  const wasHitRef = useRef(false);
 
   useEffect(() => {
     themeRef.current = { theme, isPartyTime };
   }, [theme, isPartyTime]);
 
   const startFly = useCallback(() => {
-    // Clamp to 50% of the viewport so it fits on mobile
     const effectiveSize = Math.min(size, window.innerWidth * 0.5);
     const start = getRandomEdgePosition(effectiveSize);
-    // Pick an exit side that differs from the entry side
     let end;
     do { end = getRandomEdgePosition(effectiveSize); } while (end.side === start.side);
 
-    const duration = 2500 + Math.random() * 2000; // 2.5 – 4.5 s
+    const baseDuration = 2500 + Math.random() * 2000;
+    const duration = baseDuration / speedMultiplier;
 
-    // Rotate the image to face the direction of travel (using numeric proxies)
     const dx = end.numX - start.numX;
     const dy = end.numY - start.numY;
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
     setFly({ start, end, duration, angle, phase: 'start', effectiveSize });
-  }, [size]);
+  }, [size, speedMultiplier]);
 
-  // Fire once shortly after mount, then every 20 seconds
+  // Casual mode: auto-spawn
   useEffect(() => {
+    if (targetId) return;
     const initial = setTimeout(startFly, 1000);
     const interval = setInterval(startFly, 20000);
     return () => { clearTimeout(initial); clearInterval(interval); };
-  }, [startFly]);
+  }, [startFly, targetId]);
 
+  // Game mode: spawn when targetId appears
+  useEffect(() => {
+    if (targetId) {
+      const delay = Math.random() * 500;
+      const t = setTimeout(startFly, delay);
+      return () => clearTimeout(t);
+    }
+  }, [targetId, startFly]);
+
+  // Phase transitions
   useEffect(() => {
     if (!fly) return;
 
     if (fly.phase === 'start') {
-      // Wait two animation frames so the browser paints the start position
-      // before we switch to the transition, avoiding an instant jump.
       let raf;
       const outer = requestAnimationFrame(() => {
         raf = requestAnimationFrame(() => {
@@ -140,16 +126,53 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
     }
   }, [fly?.phase]);
 
-  // -------------------------------------------------------------------------
-  // Click → kill: capture current visual position, switch to 'dying' phase
-  // -------------------------------------------------------------------------
+  // When fly ends without being hit → miss
+  useEffect(() => {
+    if (fly === null && wasHitRef.current && targetId) {
+      // was hit, handled by click handler
+    } else if (fly === null && !wasHitRef.current && targetId) {
+      // Target disappeared without being hit — but only if it was in 'fly' phase
+      // We track this with a ref on phase change
+    }
+  }, [fly, targetId]);
+
+  // Track last phase to detect miss on cleanup
+  const lastPhaseRef = useRef(null);
+  useEffect(() => {
+    lastPhaseRef.current = fly?.phase;
+  }, [fly?.phase]);
+
+  // Miss detection: when fly becomes null after being in 'fly' phase
+  useEffect(() => {
+    if (fly && fly.phase === 'fly') {
+      wasHitRef.current = false;
+    }
+  }, [fly]);
+
+  const handleFlyCleanup = useCallback(() => {
+    if (targetId && !wasHitRef.current && lastPhaseRef.current === 'fly') {
+      onMiss?.();
+    }
+  }, [targetId, onMiss]);
+
+  useEffect(() => {
+    if (fly === null && lastPhaseRef.current === 'fly' && targetId) {
+      handleFlyCleanup();
+    }
+  }, [fly, targetId, handleFlyCleanup]);
+
+  // Click → hit
   const handleClick = useCallback((e) => {
     if (!fly || fly.phase !== 'fly' || !imgRef.current) return;
     e.stopPropagation();
 
     const rect = imgRef.current.getBoundingClientRect();
-    playHitmarkerSound();
     showHitmarker(e.clientX, e.clientY);
+    wasHitRef.current = true;
+
+    if (onHit) {
+      onHit(e.clientX, e.clientY);
+    }
 
     setFly((prev) =>
       prev
@@ -159,15 +182,13 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
             posX: rect.left,
             posY: rect.top,
             velX: (Math.random() - 0.5) * 5,
-            velY: -4, // brief upward flick before gravity
+            velY: -4,
           }
         : null,
     );
-  }, [fly]);
+  }, [fly, onHit]);
 
-  // -------------------------------------------------------------------------
-  // Dying: gravity + spin animation driven by requestAnimationFrame
-  // -------------------------------------------------------------------------
+  // Dying: gravity + spin
   useEffect(() => {
     if (fly?.phase !== 'dying') return;
 
@@ -179,10 +200,10 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
     let animId;
 
     const loop = () => {
-      velY      += 0.65;           // gravity
+      velY      += 0.65;
       posX      += velX;
       posY      += velY;
-      rotation  += 9;              // tumble spin
+      rotation  += 9;
 
       if (imgRef.current) {
         imgRef.current.style.left      = `${posX}px`;
@@ -201,9 +222,30 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
 
     animId = requestAnimationFrame(loop);
     return () => { if (animId) cancelAnimationFrame(animId); };
-  }, [fly?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fly?.phase]);
 
-  // Particle trail while flying
+  // Wobble effect while flying
+  useEffect(() => {
+    if (fly?.phase !== 'fly') return;
+
+    let animId;
+    let startTime = Date.now();
+
+    const loop = () => {
+      if (!imgRef.current) return;
+      const elapsed = Date.now() - startTime;
+      const wobble = Math.sin(elapsed * 0.008) * 8;
+      const currentTransform = imgRef.current.style.transform;
+      const baseRotation = fly.angle ?? 0;
+      imgRef.current.style.transform = `rotate(${baseRotation + wobble}deg)`;
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+    return () => { if (animId) cancelAnimationFrame(animId); };
+  }, [fly?.phase, fly?.angle]);
+
+  // Particle trail
   useEffect(() => {
     if (fly?.phase !== 'fly') return;
 
@@ -236,18 +278,16 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
     const loop = () => {
       const now = Date.now();
 
-      // Spawn new particles from the trailing edge of the image
       if (imgRef.current && now - lastSpawnTime > TRAIL_CONFIG.throttleMs) {
         const rect = imgRef.current.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        // Back = center offset opposite to direction of travel
         const backX = cx - Math.cos(angleRad) * (rect.width / 2);
         const backY = cy - Math.sin(angleRad) * (rect.height / 2);
 
         const { theme: t, isPartyTime: party } = themeRef.current;
         const images = party ? t.partyImages : t.coinImages;
-        const count = Math.floor(Math.random() * 3) + 2; // 2–4 per spawn
+        const count = Math.floor(Math.random() * 3) + 2;
         for (let i = 0; i < count; i++) {
           spawnParticle(backX, backY, images[particleCounter % images.length]);
           particleCounter++;
@@ -255,7 +295,6 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
         lastSpawnTime = now;
       }
 
-      // Animate existing particles
       for (let i = activeParticles.length - 1; i >= 0; i--) {
         const p = activeParticles[i];
         const elapsed = now - p.createdAt;
@@ -293,8 +332,6 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
 
   const { start, end, duration, angle, phase, effectiveSize } = fly;
 
-  // During dying phase, render at the captured pixel position with no transition;
-  // the RAF loop imperatively updates the DOM from here.
   if (phase === 'dying') {
     return (
       <img
@@ -345,4 +382,83 @@ export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
       }}
     />
   );
+}
+
+// ---------------------------------------------------------------------------
+// Main component — manages multiple targets in game mode, single in casual
+// ---------------------------------------------------------------------------
+export function FlyingImage({ src = DEFAULT_IMAGE_SRC, size = 400 }) {
+  const game = useFlyingGame();
+  const sounds = useGameSounds();
+  const [gameTargets, setGameTargets] = useState([]);
+  const prevRoundRef = useRef(0);
+  const activeIdsRef = useRef(game?.activeTargetIds || []);
+
+  useEffect(() => {
+    activeIdsRef.current = game?.activeTargetIds || [];
+  }, [game?.activeTargetIds]);
+
+  // Spawn initial targets when round starts
+  useEffect(() => {
+    if (!game?.isPlaying) {
+      setGameTargets([]);
+      prevRoundRef.current = 0;
+      return;
+    }
+
+    if (game.round === prevRoundRef.current) return;
+    prevRoundRef.current = game.round;
+
+    const newTargets = [];
+    for (let i = 0; i < game.initialTargets; i++) {
+      const id = game.spawnNextTarget();
+      if (id) newTargets.push({ id });
+    }
+    setGameTargets(newTargets);
+  }, [game?.isPlaying, game?.round, game?.initialTargets, game?.spawnNextTarget]);
+
+  // Clean up resolved targets
+  useEffect(() => {
+    if (!game?.isPlaying) return;
+    const interval = setInterval(() => {
+      setGameTargets(prev => prev.filter(t => activeIdsRef.current.includes(t.id)));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [game?.isPlaying]);
+
+  const handleHit = useCallback((x, y) => {
+    sounds.playHit();
+    sounds.playCombo(game.combo + 1);
+    game.recordHit(x, y);
+    // Spawn replacement immediately
+    const id = game.spawnNextTarget();
+    if (id) {
+      setGameTargets(prev => [...prev, { id }]);
+    }
+  }, [sounds, game]);
+
+  const handleMiss = useCallback(() => {
+    sounds.playMiss();
+    game.recordMiss();
+  }, [sounds, game]);
+
+  if (game?.isPlaying) {
+    return (
+      <>
+        {gameTargets.map((target) => (
+          <FlyingTarget
+            key={target.id}
+            src={src}
+            size={size}
+            speedMultiplier={game.speedMultiplier}
+            targetId={target.id}
+            onHit={handleHit}
+            onMiss={handleMiss}
+          />
+        ))}
+      </>
+    );
+  }
+
+  return <FlyingTarget src={src} size={size} />;
 }
