@@ -1,6 +1,7 @@
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { TimeProvider, useTime } from './contexts/TimeContext';
 import { CartLocationProvider } from './contexts/CartLocationContext';
+import { FlyingGameProvider, useFlyingGame } from './contexts/FlyingGameContext';
 import { useCoinCursor } from './hooks/useCoinCursor';
 import { useSnowfall } from './hooks/useSnowfall';
 import { AnnoyingButton } from './components/AnnoyingButton';
@@ -11,7 +12,25 @@ import { FishMedia } from './components/FishMedia';
 import { ContentArea } from './components/ContentArea';
 import { CartMap } from './components/CartMap';
 import { FlyingImage } from './components/FlyingImage';
+import { GameOverlay } from './components/GameOverlay';
 import { isFriday } from './utils/timeUtils';
+
+function ScreenShake() {
+  const game = useFlyingGame();
+  if (!game?.screenShake) return null;
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      pointerEvents: 'none',
+      zIndex: 10000,
+      animation: 'screenShake 0.3s ease-out',
+    }} />
+  );
+}
 
 function AppContent() {
   const { theme, currentThemeKey } = useTheme();
@@ -37,6 +56,8 @@ function AppContent() {
       </SidePanelProvider>
       <CatGif />
       <FlyingImage />
+      <GameOverlay />
+      <ScreenShake />
     </>
   );
 }
@@ -47,7 +68,9 @@ function AppWithTime() {
   return (
     <TimeProvider theme={theme}>
       <CartLocationProvider>
-        <AppContent />
+        <FlyingGameProvider>
+          <AppContent />
+        </FlyingGameProvider>
       </CartLocationProvider>
     </TimeProvider>
   );
