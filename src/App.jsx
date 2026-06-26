@@ -14,6 +14,7 @@ import { CartMap } from './components/CartMap';
 import { FlyingImage } from './components/FlyingImage';
 import { GameOverlay } from './components/GameOverlay';
 import { isFriday } from './utils/timeUtils';
+import { Fan } from './components/Fan';
 
 function ScreenShake() {
   const game = useFlyingGame();
@@ -58,6 +59,7 @@ function AppContent() {
       <FlyingImage />
       <GameOverlay />
       <ScreenShake />
+      <Fan />
     </>
   );
 }

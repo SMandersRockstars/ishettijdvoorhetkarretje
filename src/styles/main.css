@@ -391,6 +391,49 @@ video {
   100% { opacity: 0; transform: scale(2); }
 }
 
+@keyframes fan-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes fan-marquee {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(-100%); }
+}
+
+@keyframes fan-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+@keyframes fan-shake {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    20%       { transform: translate(-4px, 2px) rotate(-1deg); }
+    40%       { transform: translate(4px, -3px) rotate(1deg); }
+    60%       { transform: translate(-3px, -2px) rotate(-0.5deg); }
+    80%       { transform: translate(3px, 3px) rotate(0.5deg); }
+}
+
+@keyframes fan-launch {
+    0%   { transform: translate(0,    0)     rotate(0deg)    scale(1);   opacity: 1; }
+    8%   { transform: translate(50px,  30px)  rotate(30deg)   scale(1.2); opacity: 1; }
+    18%  { transform: translate(-40px, -140px) rotate(-70deg)  scale(1.6); opacity: 1; }
+    30%  { transform: translate(160px, -280px) rotate(110deg)  scale(2.2); opacity: 1; }
+    44%  { transform: translate(-220px,-480px) rotate(-200deg) scale(3);   opacity: 0.85; }
+    60%  { transform: translate(280px, -750px) rotate(320deg)  scale(4);   opacity: 0.5; }
+    100% { transform: translate(-180px,-1400px) rotate(-600deg) scale(6);  opacity: 0; }
+}
+
+@keyframes fan-rainbow {
+    0%   { color: #ff0000; }
+    16%  { color: #ff8800; }
+    33%  { color: #ffff00; }
+    50%  { color: #00cc00; }
+    66%  { color: #0000ff; }
+    83%  { color: #8800ff; }
+    100% { color: #ff0000; }
+}
+
 /* Annoying Button */
 .annoying-button {
     position: fixed;

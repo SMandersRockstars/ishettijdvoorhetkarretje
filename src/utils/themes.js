@@ -88,7 +88,7 @@ export const themes = {
   },
   wintersport: {
     name: 'Wintersport',
-    months: [3, 6],  // March - Ski season
+    months: [3],  // March - Ski season
     coinImages: [
       'assets/wintersport-mode/ski-coin.svg',
       'assets/wintersport-mode/snowboard-coin.svg',
