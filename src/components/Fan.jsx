@@ -95,6 +95,8 @@ export function Fan() {
   const [speed, setSpeed] = useState(1);
   const [overdrivePhase, setOverdrivePhase] = useState('off');
   const [closed, setClosed] = useState(false);
+  const [manuallyOpened, setManuallyOpened] = useState(false);
+  const visible = isHot || manuallyOpened;
   const [chargeProgress, setChargeProgress] = useState(0);
   const chargeRef = useRef(null);
   const [pos, setPos] = useState(initialPos);
@@ -177,7 +179,32 @@ export function Fan() {
 
   useEffect(() => () => { if (chargeRef.current) cancelAnimationFrame(chargeRef.current); }, []);
 
-  if (loading || closed) return null;
+  if (loading) return null;
+
+  if (!visible) {
+    return (
+      <div
+        onClick={() => { setManuallyOpened(true); setClosed(false); }}
+        style={{
+          position: 'fixed',
+          bottom: '12px',
+          right: '12px',
+          zIndex: 1000,
+          fontSize: '1.5em',
+          cursor: 'pointer',
+          opacity: 0.3,
+          transition: 'opacity 0.2s',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.3')}
+      >
+        💨
+      </div>
+    );
+  }
+
+  if (closed) return null;
 
   const baseDuration = parseFloat(SPEEDS[speed].duration);
   const spinDuration = overdrivePhase === 'off'
@@ -238,7 +265,7 @@ export function Fan() {
       >
         <span>🌡️ WeatherFan v1.0 - 's-Hertogenbosch</span>
         <span
-          onClick={() => setClosed(true)}
+          onClick={() => { setClosed(true); setManuallyOpened(false); }}
           style={{
             background: '#c0c0c0',
             color: '#000',
@@ -298,7 +325,7 @@ export function Fan() {
               u heeft de ventilator weggeschoten
             </div>
             <button
-              onClick={() => { setOverdrivePhase('off'); setSpeed(1); }}
+              onClick={() => { setOverdrivePhase('off'); setSpeed(1); setManuallyOpened(false); }}
               style={{
                 fontFamily: '"Comic Sans MS", cursive',
                 fontWeight: 'bold',
