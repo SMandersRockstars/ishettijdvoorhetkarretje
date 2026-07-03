@@ -11,7 +11,7 @@ export const themes = {
     gifs: {
       beer: 'assets/default-mode/beer-drinking.gif',
       cat: 'assets/oeteldonk-mode/oeteldonk-cat.gif',
-      fish: 'assets/default-mode/fish.mp4',
+      fish: 'assets/default-mode/fish.gif',
     },
     videos: {
       subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
@@ -40,7 +40,7 @@ export const themes = {
     gifs: {
       beer: 'assets/default-mode/beer-drinking.gif',
       cat: 'assets/default-mode/cat.gif',
-      fish: 'assets/default-mode/fish.mp4',
+      fish: 'assets/default-mode/fish.gif',
     },
     videos: {
       subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
@@ -98,7 +98,7 @@ export const themes = {
     gifs: {
       beer: 'assets/default-mode/beer-drinking.gif',
       cat: 'assets/wintersport-mode/vallendeskiboy.gif',
-      fish: 'assets/default-mode/fish.mp4',
+      fish: 'assets/default-mode/fish.gif',
     },
     videos: {
       subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
@@ -124,7 +124,7 @@ export const themes = {
     gifs: {
       beer: 'assets/default-mode/beer-drinking.gif',
       cat: 'assets/default-mode/cat.gif',
-      fish: 'assets/default-mode/fish.mp4',
+      fish: 'assets/default-mode/fish.gif',
     },
     videos: {
       subway: 'assets/default-mode/youtube_RbVMiu4ubT0_480x854_h264_opt.mp4',
