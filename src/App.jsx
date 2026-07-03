@@ -50,8 +50,8 @@ function AppContent() {
         <div className="center">
           <FishMedia />
           <ContentArea />
-          {showCartMap && <CartMap />}
-          <FishMedia />
+          { showCartMap && <CartMap /> }
+          {!showCartMap && <FishMedia /> }
         </div>
         <SidePanel />
       </SidePanelProvider>
