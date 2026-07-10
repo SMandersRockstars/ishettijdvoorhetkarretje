@@ -81,6 +81,28 @@ function FanSvg({ spinDuration, overdrivePhase }) {
   );
 }
 
+function FanIcon({ size = 28 }) {
+  return (
+    <svg viewBox="0 0 100 100" width={size} height={size} style={{ display: 'block' }}>
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#c0c0c0" strokeWidth="3.5" />
+      <circle cx="50" cy="50" r="42" fill="none" stroke="#808080" strokeWidth="1" />
+      {[0, 90, 180, 270].map((deg, i) => (
+        <g key={deg} transform={`rotate(${deg}, 50, 50)`}>
+          <path
+            d="M50,50 C46,40 43,28 48,18 C52,15 59,26 57,40 Z"
+            fill={BLADE_COLORS[i]}
+            stroke="rgba(0,0,0,0.25)"
+            strokeWidth="0.5"
+          />
+        </g>
+      ))}
+      <circle cx="50" cy="50" r="10" fill="#404040" />
+      <circle cx="50" cy="50" r="7" fill="#808080" />
+      <circle cx="50" cy="50" r="3" fill="#c0c0c0" />
+    </svg>
+  );
+}
+
 function initialPos() {
   const mobile = isMobile();
   const width = mobile ? window.innerWidth * 0.88 : 260;
@@ -95,6 +117,10 @@ export function Fan() {
   const [speed, setSpeed] = useState(1);
   const [overdrivePhase, setOverdrivePhase] = useState('off');
   const [closed, setClosed] = useState(false);
+  const [manuallyOpened, setManuallyOpened] = useState(false);
+  const [boughtAnyway, setBoughtAnyway] = useState(false);
+  const visible = isHot || manuallyOpened;
+  const fanActive = isHot || boughtAnyway;
   const [chargeProgress, setChargeProgress] = useState(0);
   const chargeRef = useRef(null);
   const [pos, setPos] = useState(initialPos);
@@ -177,7 +203,29 @@ export function Fan() {
 
   useEffect(() => () => { if (chargeRef.current) cancelAnimationFrame(chargeRef.current); }, []);
 
-  if (loading || closed) return null;
+  if (loading) return null;
+
+  if (!visible || closed) {
+    return (
+      <div
+        onClick={() => { setManuallyOpened(true); setClosed(false); }}
+        style={{
+          position: 'fixed',
+          top: '12px',
+          right: '12px',
+          zIndex: 1000,
+          cursor: 'pointer',
+          opacity: 0.6,
+          transition: 'opacity 0.2s',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+      >
+        <FanIcon size={40} />
+      </div>
+    );
+  }
 
   const baseDuration = parseFloat(SPEEDS[speed].duration);
   const spinDuration = overdrivePhase === 'off'
@@ -238,7 +286,7 @@ export function Fan() {
       >
         <span>🌡️ WeatherFan v1.0 - 's-Hertogenbosch</span>
         <span
-          onClick={() => setClosed(true)}
+          onClick={() => { setClosed(true); setManuallyOpened(false); setBoughtAnyway(false); }}
           style={{
             background: '#c0c0c0',
             color: '#000',
@@ -283,7 +331,7 @@ export function Fan() {
           </div>
         </div>
 
-        {isHot && overdrivePhase === 'gone' ? (
+        {fanActive && overdrivePhase === 'gone' ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '8px 0' }}>
             <div style={{
               fontSize: mobile ? '0.6em' : '0.55em',
@@ -298,7 +346,7 @@ export function Fan() {
               u heeft de ventilator weggeschoten
             </div>
             <button
-              onClick={() => { setOverdrivePhase('off'); setSpeed(1); }}
+              onClick={() => { setOverdrivePhase('off'); setSpeed(1); setManuallyOpened(false); setBoughtAnyway(false); }}
               style={{
                 fontFamily: '"Comic Sans MS", cursive',
                 fontWeight: 'bold',
@@ -317,7 +365,7 @@ export function Fan() {
               🛒 NIEUWE FAN KOPEN
             </button>
           </div>
-        ) : isHot ? (
+        ) : fanActive ? (
           <>
             <div style={{
               color: overdrivePhase !== 'off' ? '#ff6600' : '#ff0000',
@@ -330,7 +378,9 @@ export function Fan() {
               textShadow: '1px 1px 0 #800000',
               textAlign: 'center',
             }}>
-              {overdrivePhase === 'charging' ? '🔥 BLAZING FAST ACTIVEREN!!! 🔥' : '⚠️ HET IS HEET!!! ⚠️'}
+              {overdrivePhase === 'charging'
+                ? '🔥 BLAZING FAST ACTIVEREN!!! 🔥'
+                : isHot ? '⚠️ HET IS HEET!!! ⚠️' : '🛒 TOCH MAAR GEKOCHT'}
             </div>
 
             <FanSvg spinDuration={spinDuration} overdrivePhase={overdrivePhase} />
@@ -377,15 +427,34 @@ export function Fan() {
               ~*~ KLIK OP EEN SNELHEID ~*~
             </div>
           </>
-        ) : !isHot ? (
-          <div style={{
-            color: '#000080',
-            fontSize: mobile ? '0.5em' : '0.45em',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            padding: '10px 0',
-          }}>
-            😎 Geen ventilator nodig! 😎
+        ) : !fanActive ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '10px 0' }}>
+            <div style={{
+              color: '#000080',
+              fontSize: mobile ? '0.5em' : '0.45em',
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}>
+              😎 Geen ventilator nodig! 😎
+            </div>
+            <button
+              onClick={() => setBoughtAnyway(true)}
+              style={{
+                fontFamily: '"Comic Sans MS", cursive',
+                fontWeight: 'bold',
+                fontSize: mobile ? '0.5em' : '0.4em',
+                padding: mobile ? '8px 14px' : '5px 12px',
+                cursor: 'pointer',
+                background: '#cc0000',
+                color: '#ffffff',
+                ...win95Border,
+                letterSpacing: '1px',
+                pointerEvents: 'auto',
+                touchAction: 'manipulation',
+              }}
+            >
+              🛒 KOOP ER TOCH EEN
+            </button>
           </div>
         ) : null}
       </div>

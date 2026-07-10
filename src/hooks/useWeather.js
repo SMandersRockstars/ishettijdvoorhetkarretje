@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 const DEN_BOSCH_LAT = 51.698;
 const DEN_BOSCH_LON = 5.304;
-const HOT_THRESHOLD = 23;
+const HOT_THRESHOLD = 25;
 
 export function useWeather() {
   const [temperature, setTemperature] = useState(null);
