@@ -8,7 +8,7 @@ import { AnnoyingButton } from './components/AnnoyingButton';
 import { CatGif } from './components/CatGif';
 import { ThemeToggle } from './components/ThemeToggle';
 import { SidePanel, SidePanelProvider } from './components/SidePanel';
-import { FishMedia } from './components/FishMedia';
+import { Fish3D } from './components/Fish3D';
 import { ContentArea } from './components/ContentArea';
 import { CartMap } from './components/CartMap';
 import { FlyingImage } from './components/FlyingImage';
@@ -48,10 +48,10 @@ function AppContent() {
       <SidePanelProvider>
         <SidePanel />
         <div className="center">
-          <FishMedia />
+          <Fish3D />
           <ContentArea />
           { showCartMap && <CartMap /> }
-          {!showCartMap && <FishMedia /> }
+          {!showCartMap && <Fish3D /> }
         </div>
         <SidePanel />
       </SidePanelProvider>

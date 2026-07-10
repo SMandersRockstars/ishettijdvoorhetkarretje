@@ -38,12 +38,6 @@ video {
     position: relative;
 }
 
-.fish {
-    height: 20%;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
 .center {
     display: flex;
     flex-direction: column;
@@ -491,12 +485,6 @@ video {
         width: 56%;
         height: 100vh;
         flex-direction: column;
-    }
-
-    .fish {
-        flex: 1;
-        min-height: 60px;
-        max-height: 25vh;
     }
 
     .content {
