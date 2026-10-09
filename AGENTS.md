@@ -46,7 +46,12 @@ headline). Sound is synthesised in `src/utils/partySound.js` (no asset) and duck
 background music. It does **not** fire when the page loads already in party time, it is
 dismissable with click/Escape, and it is skipped for `prefers-reduced-motion`.
 
-Preview it any day of the week with **Shift+K** (toggles `TimeContext` testMode).
+Preview it any day of the week with **Shift+K** — it toggles `TimeContext` testMode
+*and* dispatches the `karretje-boom` window event (`BOOM_EVENT` in
+`PartyExplosion.jsx`), which forces a takeover even when already in party time.
+Press it again mid-explosion to restart the whole thing from zero. Manual booms
+bypass the clock and `prefers-reduced-motion`; the automatic false → true flip
+still respects both. Sound needs the "volledige ervaring" click (`initialized`).
 
 ### Config
 
