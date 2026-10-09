@@ -23,7 +23,12 @@ if (process.env.FINGERPRINTS_DATA && !existsSync(FINGERPRINTS_FILE)) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const API_KEY = process.env.API_KEY;
+// Only `npm run dev` passes --dev; production (npm start / supervisord) never falls back.
+const DEV_MODE = process.argv.includes('--dev');
+const API_KEY = process.env.API_KEY || (DEV_MODE ? 'dev-key' : undefined);
+if (DEV_MODE && !process.env.API_KEY) {
+  console.warn('⚠️  --dev: API_KEY not set, using insecure key "dev-key" (local development only)');
+}
 if (!API_KEY) {
   console.error(
     'API_KEY env var is required. Set it and retry, e.g. `API_KEY=some-long-random-string npm run dev` ' +
