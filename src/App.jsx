@@ -11,6 +11,7 @@ import { SidePanel, SidePanelProvider } from './components/SidePanel';
 import { Fish3D } from './components/Fish3D';
 import { ContentArea } from './components/ContentArea';
 import { CartMap } from './components/CartMap';
+import { FestiveIntro } from './components/FestiveIntro';
 import { FlyingImage } from './components/FlyingImage';
 import { GameOverlay } from './components/GameOverlay';
 import { isFriday } from './utils/timeUtils';
@@ -51,11 +52,11 @@ function AppContent() {
           <Fish3D />
           <ContentArea />
           { showCartMap && <CartMap /> }
-          {!showCartMap && <Fish3D /> }
         </div>
         <SidePanel />
       </SidePanelProvider>
       <CatGif />
+      <FestiveIntro />
       <FlyingImage />
       <GameOverlay />
       <ScreenShake />
