@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { TimeProvider, useTime } from './contexts/TimeContext';
 import { CartLocationProvider } from './contexts/CartLocationContext';
@@ -14,6 +15,7 @@ import { CartMap } from './components/CartMap';
 import { FestiveIntro } from './components/FestiveIntro';
 import { FlyingImage } from './components/FlyingImage';
 import { GameOverlay } from './components/GameOverlay';
+import { PartyExplosion } from './components/PartyExplosion';
 import { isFriday } from './utils/timeUtils';
 import { Fan } from './components/Fan';
 
@@ -36,8 +38,22 @@ function ScreenShake() {
 
 function AppContent() {
   const { theme, currentThemeKey } = useTheme();
-  const { isPartyTime } = useTime();
+  const { isPartyTime, testMode, toggleTestMode } = useTime();
   const showCartMap = isFriday();
+
+  // Secret shortcut: Shift+K forces party time on/off so the takeover can be
+  // previewed on any day of the week.
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && e.code === 'KeyK') {
+        toggleTestMode();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toggleTestMode]);
 
   useCoinCursor({ theme, isPartyTime });
   useSnowfall(currentThemeKey === 'wintersport');
@@ -59,6 +75,7 @@ function AppContent() {
       <FestiveIntro />
       <FlyingImage />
       <GameOverlay />
+      <PartyExplosion />
       <ScreenShake />
       <Fan />
     </>

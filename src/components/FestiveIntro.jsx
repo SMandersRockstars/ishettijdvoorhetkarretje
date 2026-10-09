@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDraggable } from '../hooks/useDraggable';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 const SEEN_KEY = 'karretje:introSeen';
 
@@ -18,22 +19,6 @@ function markIntroSeen(themeKey) {
   } catch {
     // Private mode / storage disabled — the intro just shows again next reload
   }
-}
-
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-    if (!mq) return;
-    const onChange = (e) => setReduced(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  return reduced;
 }
 
 /**

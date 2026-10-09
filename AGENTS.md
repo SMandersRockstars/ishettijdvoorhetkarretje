@@ -37,6 +37,17 @@ There is **no lint, test, or typecheck** configured. CI only validates `src/conf
 - `src/contexts/TimeContext.jsx` — party time logic, reads `src/config.json`
 - `src/contexts/CartLocationContext.jsx` — polls `/api/location`, drives CartMap
 
+### Party-time takeover
+
+`src/components/PartyExplosion.jsx` + `src/styles/party-explosion.css` take over the
+full viewport when `isPartyTime` flips false → true (strobe, `#root` earthquake,
+shockwave rings, full-cart fly-by, `theme.partyImages` shrapnel, confetti, slamming
+headline). Sound is synthesised in `src/utils/partySound.js` (no asset) and ducks the
+background music. It does **not** fire when the page loads already in party time, it is
+dismissable with click/Escape, and it is skipped for `prefers-reduced-motion`.
+
+Preview it any day of the week with **Shift+K** (toggles `TimeContext` testMode).
+
 ### Config
 
 - `src/config.json` — party time overrides + map zones. CI validates schema on every push/PR.
