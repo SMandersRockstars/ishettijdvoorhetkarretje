@@ -25,7 +25,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.API_KEY;
 if (!API_KEY) {
-  console.error('API_KEY env var is required');
+  console.error(
+    'API_KEY env var is required. Set it and retry, e.g. `API_KEY=some-long-random-string npm run dev` ' +
+      '(must match API_KEY in esp32_cart_tracker/config.h).'
+  );
   process.exit(1);
 }
 
