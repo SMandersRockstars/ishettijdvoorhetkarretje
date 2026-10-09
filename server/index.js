@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { existsSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -22,10 +23,42 @@ if (process.env.FINGERPRINTS_DATA && !existsSync(FINGERPRINTS_FILE)) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const API_KEY = process.env.API_KEY || 'dev-key-change-in-production';
+// Only `npm run dev` passes --dev; production (npm start / supervisord) never falls back.
+const DEV_MODE = process.argv.includes('--dev');
+const API_KEY = process.env.API_KEY || (DEV_MODE ? 'dev-key' : undefined);
+if (DEV_MODE && !process.env.API_KEY) {
+  console.warn('⚠️  --dev: API_KEY not set, using insecure key "dev-key" (local development only)');
+}
+if (!API_KEY) {
+  console.error(
+    'API_KEY env var is required. Set it and retry, e.g. `API_KEY=some-long-random-string npm run dev` ' +
+      '(must match API_KEY in esp32_cart_tracker/config.h).'
+  );
+  process.exit(1);
+}
 
-app.use(cors());
-app.use(express.json());
+// Behind nginx: trust one proxy hop so rate limiting sees the real client IP
+app.set('trust proxy', 1);
+
+// Same-origin by default (frontend is served via nginx / Vite proxy).
+// Set CORS_ORIGINS to a comma-separated list to allow other browser origins.
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(cors({ origin: allowedOrigins }));
+app.use(express.json({ limit: '100kb' }));
+
+// Throttle brute-forcing of the API key on state-changing requests
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use((req, res, next) =>
+  ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) ? writeLimiter(req, res, next) : next()
+);
 
 // Middleware to validate API key on protected routes
 app.use((req, res, next) => {
@@ -40,6 +73,12 @@ app.use('/api/calibrate', calibrateRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Error handler: no stack traces to clients
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(err.status || 500).json({ error: err.status && err.status < 500 ? err.message : 'Internal server error' });
 });
 
 app.listen(PORT, () => {

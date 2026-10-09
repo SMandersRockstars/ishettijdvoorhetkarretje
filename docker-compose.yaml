@@ -7,4 +7,4 @@ services:
     volumes:
       - ./server/data:/app/server/data
     environment:
-      - API_KEY=${API_KEY:-dev-key-change-in-production}
+      - "API_KEY=${API_KEY:?API_KEY is required - run API_KEY=your-secret docker compose up --build, or put API_KEY=your-secret in a .env file next to docker-compose.yaml}"

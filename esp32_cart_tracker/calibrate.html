@@ -99,7 +99,7 @@
       </label>
       <label>
         API Key
-        <input type="text" id="apiKey" value="dev-key-change-in-production" placeholder="API key">
+        <input type="text" id="apiKey" placeholder="API key">
       </label>
     </div>
   </div>
@@ -205,7 +205,7 @@
       try {
         const res = await fetch(`${serverUrl()}/api/calibrate/confirm`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey() },
           body: JSON.stringify({ zone }),
         });
         if (res.ok) {

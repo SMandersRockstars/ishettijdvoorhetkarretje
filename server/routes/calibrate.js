@@ -1,7 +1,8 @@
 import express from 'express';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { requireApiKey } from '../lib/auth.js';
+import { readJson, writeJsonAtomic } from '../lib/storage.js';
 
 const router = express.Router();
 
@@ -9,24 +10,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const FINGERPRINTS_FILE = join(__dirname, '../data/fingerprints.json');
 
 function readFingerprints() {
-  if (!existsSync(FINGERPRINTS_FILE)) return {};
-  return JSON.parse(readFileSync(FINGERPRINTS_FILE, 'utf8'));
+  return readJson(FINGERPRINTS_FILE, {});
 }
 
 function writeFingerprints(data) {
-  writeFileSync(FINGERPRINTS_FILE, JSON.stringify(data, null, 2));
+  writeJsonAtomic(FINGERPRINTS_FILE, data);
 }
 
 let pendingScan = null;
 
 // POST /api/calibrate/pending - ESP32 posts raw WiFi scan, zone assigned later via web UI
-router.post('/pending', (req, res) => {
-  const apiKey = req.get('X-Api-Key');
-
-  if (apiKey !== req.api_key) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+router.post('/pending', requireApiKey, (req, res) => {
   const { readings } = req.body;
 
   if (!readings || !Array.isArray(readings)) {
@@ -48,7 +42,7 @@ router.get('/pending', (req, res) => {
 });
 
 // POST /api/calibrate/confirm - Web UI assigns a zone to the pending scan and saves it
-router.post('/confirm', (req, res) => {
+router.post('/confirm', requireApiKey, (req, res) => {
   const { zone } = req.body;
 
   if (!zone) {
@@ -83,13 +77,7 @@ router.get('/fingerprints', (req, res) => {
 });
 
 // DELETE /api/calibrate/fingerprints/:zone - Remove a zone's fingerprint
-router.delete('/fingerprints/:zone', (req, res) => {
-  const apiKey = req.get('X-Api-Key');
-
-  if (apiKey !== req.api_key) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+router.delete('/fingerprints/:zone', requireApiKey, (req, res) => {
   const { zone } = req.params;
   const fingerprints = readFingerprints();
   const existed = zone in fingerprints;

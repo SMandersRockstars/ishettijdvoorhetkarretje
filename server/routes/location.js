@@ -1,7 +1,8 @@
 import express from 'express';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { requireApiKey } from '../lib/auth.js';
+import { readJson, writeJsonAtomic } from '../lib/storage.js';
 
 const router = express.Router();
 
@@ -9,24 +10,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOCATION_FILE = join(__dirname, '../data/location.json');
 
 function readLocation() {
-  if (!existsSync(LOCATION_FILE)) {
-    return { zone: 'unknown', timestamp: null, updatedAt: null };
-  }
-  return JSON.parse(readFileSync(LOCATION_FILE, 'utf8'));
+  return readJson(LOCATION_FILE, { zone: 'unknown', timestamp: null, updatedAt: null });
 }
 
 function writeLocation(data) {
-  writeFileSync(LOCATION_FILE, JSON.stringify(data, null, 2));
+  writeJsonAtomic(LOCATION_FILE, data);
 }
 
 // POST /api/location - ESP32 or client sends location update
-router.post('/', (req, res) => {
-  const apiKey = req.get('X-Api-Key');
-
-  if (apiKey !== req.api_key) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+router.post('/', requireApiKey, (req, res) => {
   const { zone, timestamp } = req.body;
 
   if (!zone || typeof zone !== 'string') {
