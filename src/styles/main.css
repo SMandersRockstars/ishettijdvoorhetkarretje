@@ -317,6 +317,34 @@ video {
     background: #000;
     border: 2px solid rgba(255, 107, 53, 0.55);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+    cursor: grab;
+    /* let the pointer events own drags instead of the browser scrolling */
+    touch-action: none;
+}
+
+.festive-intro.is-dragging {
+    cursor: grabbing;
+    box-shadow: 0 18px 56px rgba(0, 0, 0, 0.8);
+}
+
+.festive-intro:focus-visible {
+    outline: 2px solid rgba(255, 107, 53, 0.9);
+    outline-offset: 3px;
+}
+
+/* Drag affordance */
+.festive-intro--ambient::before {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* One-shot: centred, dismissed when the clip ends */
@@ -365,6 +393,7 @@ video {
     position: absolute;
     top: 6px;
     right: 6px;
+    z-index: 2;
     padding: 3px 10px;
     font-size: 0.45em;
     line-height: 1.4;

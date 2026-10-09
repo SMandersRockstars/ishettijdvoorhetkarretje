@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDraggable } from '../hooks/useDraggable';
 
 const SEEN_KEY = 'karretje:introSeen';
 
@@ -55,6 +56,7 @@ export function FestiveIntro() {
   const loop = Boolean(intro?.loop);
   const [dismissed, setDismissed] = useState(() => hasSeenIntro(currentThemeKey));
   const videoRef = useRef(null);
+  const rootRef = useRef(null);
 
   // A new festivity gets its own intro, even later in the same session
   useEffect(() => {
@@ -68,6 +70,12 @@ export function FestiveIntro() {
 
   const reducedMotion = usePrefersReducedMotion();
   const visible = Boolean(initialized && isFestive && intro && !dismissed && !reducedMotion);
+
+  // Grab it and put it wherever you want; remembered between reloads
+  useDraggable(rootRef, {
+    storageKey: `karretje:introPos:${currentThemeKey}`,
+    enabled: visible,
+  });
 
   // Let the intro clip have the speakers, then hand them back
   useEffect(() => {
@@ -100,9 +108,11 @@ export function FestiveIntro() {
 
   return (
     <div
+      ref={rootRef}
       className={`festive-intro ${loop ? 'festive-intro--ambient' : 'festive-intro--oneshot'}`}
       role="dialog"
       aria-label={`${theme.name} intro`}
+      tabIndex={0}
     >
       <video
         ref={videoRef}
