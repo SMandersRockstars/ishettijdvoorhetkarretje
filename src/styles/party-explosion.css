@@ -1,0 +1,280 @@
+/* -----------------------------------------------------------------------
+   PARTY EXPLOSION
+   The extreme transition into party time: strobe, earthquake, shockwaves,
+   full-cart fly-by, bier shrapnel, confetti and a giant slamming headline.
+   Component: src/components/PartyExplosion.jsx
+   ----------------------------------------------------------------------- */
+
+/* The app itself convulses. Applied to #root so the fixed overlay rides along. */
+#root.party-earthquake {
+    will-change: transform;
+    animation: party-earthquake 2.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes party-earthquake {
+    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    4%   { transform: translate(-22px, 14px) rotate(-1.2deg) scale(1.02); }
+    9%   { transform: translate(20px, -18px) rotate(1.4deg) scale(1.03); }
+    14%  { transform: translate(-26px, -12px) rotate(-1.6deg) scale(1.01); }
+    19%  { transform: translate(24px, 18px) rotate(1.1deg) scale(1.04); }
+    25%  { transform: translate(-18px, 10px) rotate(-0.9deg) scale(1.02); }
+    32%  { transform: translate(16px, -14px) rotate(0.8deg) scale(1.03); }
+    40%  { transform: translate(-13px, 8px) rotate(-0.7deg) scale(1.01); }
+    50%  { transform: translate(11px, -9px) rotate(0.5deg) scale(1.02); }
+    62%  { transform: translate(-8px, 6px) rotate(-0.4deg) scale(1.01); }
+    75%  { transform: translate(6px, -5px) rotate(0.3deg) scale(1.01); }
+    88%  { transform: translate(-3px, 2px) rotate(-0.15deg) scale(1); }
+}
+
+.party-boom {
+    position: fixed;
+    inset: 0;
+    z-index: 100001;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: party-boom-out 700ms ease-in 4900ms both;
+}
+
+.party-boom-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(20, 20, 0, 0.55), rgba(0, 0, 0, 0.9));
+    animation: party-backdrop-in 180ms ease-out both;
+}
+
+/* Disco strobe — flashing coloured wash over everything */
+.party-boom-strobe {
+    position: absolute;
+    inset: -15%;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    animation:
+        party-strobe 90ms steps(1, end) infinite,
+        party-layer-out 500ms ease-in 1900ms both;
+}
+
+@keyframes party-strobe {
+    0%   { background: rgba(0, 255, 90, 0.30); }
+    20%  { background: rgba(255, 255, 0, 0.34); }
+    40%  { background: rgba(255, 40, 40, 0.28); }
+    60%  { background: rgba(0, 190, 255, 0.30); }
+    80%  { background: rgba(255, 255, 255, 0.45); }
+    100% { background: rgba(255, 0, 220, 0.30); }
+}
+
+@keyframes party-backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes party-layer-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes party-boom-out {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(1.35); }
+}
+
+/* Expanding shockwave rings */
+.party-boom-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60px;
+    height: 60px;
+    margin: -30px 0 0 -30px;
+    border-radius: 50%;
+    border: 8px solid rgba(255, 215, 0, 0.9);
+    box-shadow:
+        0 0 40px rgba(255, 215, 0, 0.8),
+        0 0 120px rgba(255, 120, 0, 0.5),
+        inset 0 0 40px rgba(255, 255, 0, 0.45);
+    pointer-events: none;
+    animation: party-ring 1.5s cubic-bezier(0.1, 0.8, 0.2, 1) var(--delay, 0s) both;
+}
+
+@keyframes party-ring {
+    0%   { transform: scale(0.15); opacity: 0.95; }
+    70%  { opacity: 0.5; }
+    100% { transform: scale(48); opacity: 0; }
+}
+
+/* Confetti / streamers */
+.party-confetti {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+    animation: party-confetti-burst var(--dur, 2.6s) cubic-bezier(0.12, 0.85, 0.25, 1) var(--delay, 0.2s) both;
+}
+
+.party-confetti--round {
+    border-radius: 50%;
+}
+
+@keyframes party-confetti-burst {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.15) rotate(0deg);
+    }
+    8% {
+        opacity: 1;
+    }
+    55% {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--x) * 0.72), calc(-50% + var(--y))) scale(1) rotate(calc(var(--spin) * 0.55));
+    }
+    100% {
+        opacity: 0.85;
+        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y) + 130vh)) scale(0.9) rotate(var(--spin));
+    }
+}
+
+/* Beer / snacks shrapnel */
+.party-shrapnel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: auto;
+    opacity: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 0 14px rgba(255, 220, 0, 0.75));
+    animation: party-shrapnel-fly var(--dur, 3s) cubic-bezier(0.1, 0.8, 0.3, 1) var(--delay, 0.3s) both;
+}
+
+@keyframes party-shrapnel-fly {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+    }
+    10% {
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--x) * 0.8), calc(-50% + var(--y))) scale(1.1) rotate(calc(var(--spin) * 0.7));
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y) + 110vh)) scale(0.95) rotate(var(--spin));
+    }
+}
+
+/* The karretje itself, flying across the office */
+.party-boom-cart {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: clamp(180px, 32vw, 420px);
+    height: auto;
+    z-index: 2;
+    pointer-events: none;
+    filter: drop-shadow(0 0 30px rgba(255, 220, 0, 0.85));
+    animation: party-cart-fly 3.6s cubic-bezier(0.35, 0.05, 0.65, 0.95) 1.4s both;
+}
+
+@keyframes party-cart-fly {
+    0%   { transform: translate(-45vw, -50%) rotate(-18deg) scale(0.55); opacity: 0; }
+    12%  { opacity: 1; }
+    45%  { transform: translate(35vw, -85%) rotate(14deg) scale(1.25); opacity: 1; }
+    75%  { opacity: 1; }
+    100% { transform: translate(125vw, -20%) rotate(46deg) scale(0.9); opacity: 0; }
+}
+
+/* The headline */
+.party-boom-text {
+    position: relative;
+    z-index: 3;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.06em;
+    text-transform: uppercase;
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: #ffe14d;
+    text-shadow:
+        0 0 14px rgba(255, 255, 255, 0.9),
+        0 0 38px rgba(255, 200, 0, 0.9),
+        4px 4px 0 #d61a1a,
+        8px 8px 0 #7a0f0f,
+        12px 12px 28px rgba(0, 0, 0, 0.85);
+    pointer-events: none;
+    animation:
+        party-slam 820ms cubic-bezier(0.16, 1.7, 0.3, 1) 260ms both,
+        party-text-shake 170ms ease-in-out 1150ms infinite,
+        party-hue 900ms linear 1150ms infinite;
+}
+
+.party-boom-line {
+    display: block;
+    font-size: clamp(1.8rem, 7vw, 6rem);
+}
+
+.party-boom-line--big {
+    font-size: clamp(2.2rem, 9vw, 8rem);
+}
+
+.party-boom-beers {
+    display: block;
+    margin-top: 0.25em;
+    font-size: clamp(1.4rem, 4.5vw, 3.5rem);
+    text-shadow: 0 0 20px rgba(255, 200, 0, 0.9);
+}
+
+@keyframes party-slam {
+    0%   { transform: scale(16) rotate(-22deg); opacity: 0; filter: blur(18px); }
+    55%  { transform: scale(0.84) rotate(5deg); opacity: 1; filter: blur(0); }
+    72%  { transform: scale(1.14) rotate(-3deg); }
+    86%  { transform: scale(0.96) rotate(1deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes party-text-shake {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25%      { transform: translate(-10px, 7px) rotate(-1.6deg); }
+    50%      { transform: translate(9px, -6px) rotate(1.6deg); }
+    75%      { transform: translate(-6px, -8px) rotate(-0.9deg); }
+}
+
+@keyframes party-hue {
+    0%   { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .party-boom-cart {
+        width: min(60vw, 260px);
+    }
+
+    .party-boom-text {
+        text-shadow:
+            0 0 12px rgba(255, 255, 255, 0.9),
+            3px 3px 0 #d61a1a,
+            6px 6px 18px rgba(0, 0, 0, 0.85);
+    }
+}
+
+/* Nobody should be blinded / made dizzy by this. */
+@media (prefers-reduced-motion: reduce) {
+    #root.party-earthquake,
+    .party-boom,
+    .party-boom-strobe,
+    .party-boom-ring,
+    .party-confetti,
+    .party-shrapnel,
+    .party-boom-cart,
+    .party-boom-text {
+        animation: none !important;
+    }
+}
