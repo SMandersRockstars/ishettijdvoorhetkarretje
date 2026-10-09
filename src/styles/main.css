@@ -303,6 +303,107 @@ video {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* -----------------------------------------------------------------------
+   Festive intro clip
+   Restored from the vanilla-JS `init()` overlay. The original was appended to
+   document.body and never removed; this version is a component that unmounts
+   itself. Two variants, picked by `theme.intro.loop`.
+   ----------------------------------------------------------------------- */
+.festive-intro {
+    position: fixed;
+    z-index: 10003;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #000;
+    border: 2px solid rgba(255, 107, 53, 0.55);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* One-shot: centred, dismissed when the clip ends */
+.festive-intro--oneshot {
+    top: 50%;
+    left: 50%;
+    width: min(480px, 78vw);
+    aspect-ratio: 16 / 9;
+    animation: festive-intro-in-center 0.35s ease-out;
+}
+
+/* Ambient: corner overlay that keeps playing. Sits above the duck-hunt HUD
+   button (bottom: 20px + ~44px tall) so the two don't overlap. */
+.festive-intro--ambient {
+    right: 16px;
+    bottom: 76px;
+    width: min(300px, 34vw);
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    animation: festive-intro-in-corner 0.35s ease-out;
+}
+
+.festive-intro-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.festive-intro-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 20px 12px 8px;
+    font-size: 0.55em;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 1px 3px #000;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+    pointer-events: none;
+}
+
+.festive-intro-skip {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 3px 10px;
+    font-size: 0.45em;
+    line-height: 1.4;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.festive-intro-skip:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+@keyframes festive-intro-in-center {
+    from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes festive-intro-in-corner {
+    from { opacity: 0; transform: translateY(16px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .festive-intro {
+        animation: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .festive-intro--ambient {
+        width: min(220px, 46vw);
+        bottom: 68px;
+        right: 10px;
+    }
+}
+
 /* Wintersport snowflake styles */
 .snowflake {
     position: fixed;

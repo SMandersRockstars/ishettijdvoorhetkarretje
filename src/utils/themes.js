@@ -26,6 +26,9 @@ export const themes = {
     ],
     icon: 'assets/oeteldonk-mode/oeteldonk-cart.png',
     fullCart: 'assets/oeteldonk-mode/oeteldonk-full-cart.png',
+    // One-shot clip played (with sound) after the "volledige ervaring" click.
+    // null = no intro clip for this theme, background music only.
+    intro: null,
     cssClass: 'oeteldonk-theme',
   },
   halloween: {
@@ -55,6 +58,16 @@ export const themes = {
     ],
     icon: 'assets/spooktober-mode/halloween-cart.png',
     fullCart: 'assets/spooktober-mode/halloween-full-cart.png',
+    intro: {
+      src: 'assets/spooktober-mode/halloween-init.mp4',
+      poster: 'assets/spooktober-mode/halloween-cart.png',
+      caption: 'Happy Halloween',
+      // true  → ambient: sits in the corner and loops with sound until closed.
+      //         Required here — this clip is the ONLY halloween audio we have,
+      //         a one-shot would fall back to the default fish music.
+      // false → centred one-shot, dismissed when the clip ends.
+      loop: true,
+    },
     cssClass: 'halloween-theme',
   },
   christmas: {
@@ -84,6 +97,7 @@ export const themes = {
     ],
     icon: 'assets/christmas-mode/empty_cart.png',
     fullCart: 'assets/christmas-mode/christmas-full-cart.jpg',
+    intro: null,
     cssClass: 'christmas-theme',
   },
   wintersport: {
@@ -115,6 +129,7 @@ export const themes = {
     ],
     icon: 'assets/wintersport-mode/wintersport-empty-cart.png',
     fullCart: 'assets/wintersport-mode/wintersport-full-cart.png',
+    intro: null,
     cssClass: 'wintersport-theme',
   },
   default: {
@@ -139,6 +154,7 @@ export const themes = {
     ],
     icon: 'assets/default-mode/empty_cart.png',
     fullCart: 'assets/default-mode/full_cart.jpg',
+    intro: null,
     cssClass: 'default-theme',
   },
 };
