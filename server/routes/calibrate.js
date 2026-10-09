@@ -42,7 +42,7 @@ router.get('/pending', (req, res) => {
 });
 
 // POST /api/calibrate/confirm - Web UI assigns a zone to the pending scan and saves it
-router.post('/confirm', (req, res) => {
+router.post('/confirm', requireApiKey, (req, res) => {
   const { zone } = req.body;
 
   if (!zone) {

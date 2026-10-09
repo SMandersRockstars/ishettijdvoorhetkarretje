@@ -205,7 +205,7 @@
       try {
         const res = await fetch(`${serverUrl()}/api/calibrate/confirm`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey() },
           body: JSON.stringify({ zone }),
         });
         if (res.ok) {
