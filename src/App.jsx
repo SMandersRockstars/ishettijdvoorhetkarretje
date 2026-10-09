@@ -15,7 +15,7 @@ import { CartMap } from './components/CartMap';
 import { FestiveIntro } from './components/FestiveIntro';
 import { FlyingImage } from './components/FlyingImage';
 import { GameOverlay } from './components/GameOverlay';
-import { PartyExplosion } from './components/PartyExplosion';
+import { PartyExplosion, BOOM_EVENT } from './components/PartyExplosion';
 import { isFriday } from './utils/timeUtils';
 import { Fan } from './components/Fan';
 
@@ -41,14 +41,18 @@ function AppContent() {
   const { isPartyTime, testMode, toggleTestMode } = useTime();
   const showCartMap = isFriday();
 
-  // Secret shortcut: Shift+K forces party time on/off so the takeover can be
-  // previewed on any day of the week.
+  // Secret shortcut: Shift+K always retriggers the full party takeover (earthquake,
+  // strobe, confetti, fanfare) and also toggles TimeContext testMode so the app
+  // stays in party state while you watch it. Works any day of the week, and works
+  // repeatedly — press it again mid-explosion to restart from zero.
   useEffect(() => {
     const onKey = (e) => {
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && e.code === 'KeyK') {
+        e.preventDefault();
         toggleTestMode();
+        window.dispatchEvent(new Event(BOOM_EVENT));
       }
     };
     window.addEventListener('keydown', onKey);

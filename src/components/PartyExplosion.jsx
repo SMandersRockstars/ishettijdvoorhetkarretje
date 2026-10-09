@@ -67,9 +67,16 @@ function makeBottles(count, images) {
  * a shockwave, a full-cart fly-by, beer/bier-snacks shrapnel, confetti and a
  * synthesised siren-into-fanfare.
  *
- * Only the transition triggers it — loading the page already in party time is
- * calm. Dismissable with a click or Escape. Skipped for prefers-reduced-motion.
+ * Only the transition triggers the automatic run — loading the page already in
+ * party time is calm. Dismissable with a click or Escape. The automatic run is
+ * skipped for prefers-reduced-motion.
+ *
+ * A manual re-trigger is always available: dispatch `karretje-boom` on `window`
+ * (Shift+K does this, see App.jsx). Manual booms ignore both the clock and
+ * prefers-reduced-motion, because the user explicitly asked for the explosion.
  */
+export const BOOM_EVENT = 'karretje-boom';
+
 export function PartyExplosion() {
   const { isPartyTime } = useTime();
   const { theme, initialized, setDucked } = useTheme();
@@ -78,15 +85,32 @@ export function PartyExplosion() {
   const [runId, setRunId] = useState(0);
   const [running, setRunning] = useState(false);
   const prevParty = useRef(isPartyTime);
+  // When a manual boom just fired, suppress the automatic one caused by the same
+  // Shift+K press flipping isPartyTime false -> true. Otherwise the confetti gets
+  // regenerated twice in one frame.
+  const lastManualBoomAt = useRef(0);
+
+  const boom = useCallback((source) => {
+    if (source === 'manual') lastManualBoomAt.current = Date.now();
+    setRunId((id) => id + 1);
+    setRunning(true);
+  }, []);
 
   // Fire only on the actual flip, never on mount.
   useEffect(() => {
     const wasParty = prevParty.current;
     prevParty.current = isPartyTime;
     if (reducedMotion || wasParty || !isPartyTime) return;
-    setRunId((id) => id + 1);
-    setRunning(true);
-  }, [isPartyTime, reducedMotion]);
+    if (Date.now() - lastManualBoomAt.current < 1000) return;
+    boom('auto');
+  }, [isPartyTime, reducedMotion, boom]);
+
+  // Manual re-trigger: works any day, any hour, even while already party time.
+  useEffect(() => {
+    const onManualBoom = () => boom('manual');
+    window.addEventListener(BOOM_EVENT, onManualBoom);
+    return () => window.removeEventListener(BOOM_EVENT, onManualBoom);
+  }, [boom]);
 
   const dismiss = useCallback(() => setRunning(false), []);
 
@@ -98,7 +122,14 @@ export function PartyExplosion() {
     if (!running) return undefined;
 
     const root = document.getElementById('root');
-    root?.classList.add('party-earthquake');
+    if (root) {
+      // Cleanup and this effect run back-to-back without a style recalc between
+      // them, so a bare add/remove would not restart a running shake. The reflow
+      // read forces the browser to flush the removal before we re-apply it.
+      root.classList.remove('party-earthquake');
+      void root.offsetWidth;
+      root.classList.add('party-earthquake');
+    }
     setDucked(true);
     if (initialized) playPartyFanfare();
 
@@ -111,7 +142,9 @@ export function PartyExplosion() {
       root?.classList.remove('party-earthquake');
       setDucked(false);
     };
-  }, [running, initialized, setDucked]);
+    // runId in deps so a re-trigger restarts the earthquake + fanfare from zero
+    // instead of finishing the previous run's timers.
+  }, [running, runId, initialized, setDucked]);
 
   // Escape hatch for anyone who wants their screen back early.
   useEffect(() => {
@@ -137,12 +170,12 @@ export function PartyExplosion() {
       <div className="party-boom-strobe" />
 
       {[0, 0.25, 0.5].map((delay) => (
-        <span key={delay} className="party-boom-ring" style={{ '--delay': `${delay}s` }} />
+        <span key={`ring-${runId}-${delay}`} className="party-boom-ring" style={{ '--delay': `${delay}s` }} />
       ))}
 
       {confetti.map((c) => (
         <span
-          key={`c-${c.id}`}
+          key={`c-${runId}-${c.id}`}
           className={`party-confetti${c.round ? ' party-confetti--round' : ''}`}
           style={{
             '--x': `${c.x}px`,
@@ -159,7 +192,7 @@ export function PartyExplosion() {
 
       {bottles.map((b) => (
         <img
-          key={`b-${b.id}`}
+          key={`b-${runId}-${b.id}`}
           className="party-shrapnel"
           src={b.src}
           alt=""
@@ -174,9 +207,9 @@ export function PartyExplosion() {
         />
       ))}
 
-      <img className="party-boom-cart" src={theme.fullCart} alt="" />
+      <img key={`cart-${runId}`} className="party-boom-cart" src={theme.fullCart} alt="" />
 
-      <h1 className="party-boom-text">
+      <h1 key={`text-${runId}`} className="party-boom-text">
         <span className="party-boom-line">HET IS TIJD</span>
         <span className="party-boom-line party-boom-line--big">VOOR HET KARRETJE!!!</span>
         <span className="party-boom-beers">🍺🍻🍺🍻🍺</span>
