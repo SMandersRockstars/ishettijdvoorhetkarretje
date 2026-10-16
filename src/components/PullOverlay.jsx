@@ -118,12 +118,13 @@ function Pedal({ name, value, hint }) {
 
 // Load gauge with the grip ceiling marked, so you can see the sled pass the point
 // where the ground can no longer help you.
-function LoadGauge({ loadN, ceilingN }) {
+function LoadGauge({ loadN, ceilingN, shiftN }) {
   const max = ceilingN * 1.35;
   const segments = 28;
   const filled = Math.max(0, Math.min(1, loadN / max));
   const ceilAt = ceilingN / max;
   const over = loadN > ceilingN;
+  const shiftPct = Math.round((shiftN || 0) * 100);
   const cells = [];
   for (let i = 0; i < segments; i += 1) {
     const on = i / segments < filled;
@@ -136,13 +137,18 @@ function LoadGauge({ loadN, ceilingN }) {
   }
   return (
     <div className="pull-gauge pull-gauge-load">
-      <span className="pull-gauge-label">LOAD</span>
+      <span className="pull-gauge-label">SLED DRAG</span>
       <span className="pull-cells">
         {cells}
-        <span className="pull-ceiling-mark" style={{ left: `${ceilAt * 100}%` }} title="grip ceiling" />
+        <span className="pull-ceiling-mark" style={{ left: `${ceilAt * 100}%` }}>
+          <span className="pull-ceiling-label">GRIP LIMIT</span>
+        </span>
       </span>
       <span className={`pull-load-value ${over ? 'is-over' : ''}`}>
         {(loadN / 1000).toFixed(1)} kN
+      </span>
+      <span className={`pull-shift-value ${shiftPct >= 50 ? 'is-shifted' : ''}`}>
+        CARGO {shiftPct}%
       </span>
     </div>
   );
@@ -171,7 +177,7 @@ function Hud({ snap }) {
 
       <div className="pull-gauges">
         <Bar value={snap.rpm} max={3200} label="RPM" className="pull-tacho" />
-        <LoadGauge loadN={snap.sledN} ceilingN={snap.ceilingN} />
+        <LoadGauge loadN={snap.sledN} ceilingN={snap.ceilingN} shiftN={snap.loadShift} />
         <Bar value={snap.distance} max={TRACK_M} label="DISTANCE" />
         <Bar value={snap.tireHealth} max={1} label="TYRES" className="pull-tyres" dangerBelow={0.34} />
       </div>

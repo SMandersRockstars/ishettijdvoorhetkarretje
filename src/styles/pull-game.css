@@ -223,6 +223,18 @@
   pointer-events: none;
 }
 
+.pull-ceiling-label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 4px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #8fd6ff;
+  white-space: nowrap;
+}
+
 .pull-load-value {
   color: #e8d5ae;
   font-size: 13px;
@@ -232,6 +244,18 @@
 
 .pull-load-value.is-over {
   color: #ffb84d;
+  font-weight: bold;
+}
+
+.pull-shift-value {
+  color: #c9b58a;
+  font-size: 12px;
+  min-width: 84px;
+  text-align: right;
+}
+
+.pull-shift-value.is-shifted {
+  color: #ff9f4d;
   font-weight: bold;
 }
 
