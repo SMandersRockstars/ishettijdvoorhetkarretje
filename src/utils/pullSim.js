@@ -46,7 +46,8 @@ const LOCK_EPS = 0.5; // rad/s of engine/wheel mismatch treated as "already coup
 const SLED_START_FRAC = 0.45;
 // Small on purpose. Almost all of the end-of-track heaviness now comes from the
 // cargo shift (SHIFT_GAIN), not from this ramp -- which is the real mechanism.
-// At full shift the line drag lands just under the grip ceiling.
+// With the shift gain on top, the line drag ends well PAST the grip ceiling:
+// the last metres have to be earned with momentum, not with grip.
 const SLED_FINISH_FRAC = 0.82;
 const SLED_CURVE = 2.0;
 // A real sled ploughs: drag it faster and it digs harder. Without this the tractor
@@ -106,6 +107,19 @@ function idleFloor(rpm) {
   return clamp(gov, 0, torqueCurve(rpm) * 0.3);
 }
 
+// Engine drag. The base is plain internal friction; it is what the limiter has
+// to beat under power, so it stays small. On top of that, cutting the fuel
+// turns a diesel into an air pump: compression braking pulls the revs down hard
+// the moment the throttle is chopped. It fades out near idle so the governor can
+// still catch the engine cleanly, and across the first bit of pedal travel so
+// partial-throttle modulation keeps its gentle behaviour.
+function engineBrakeNm(gas, rpm) {
+  const base = 12 + rpm * 0.02;
+  const chop = 1 - clamp(gas / 0.35, 0, 1);
+  const overIdle = clamp((rpm - IDLE_RPM) / 600, 0, 1);
+  return base + chop * overIdle * (90 + rpm * 0.2);
+}
+
 // Full-throttle ground force is scaled against the dry grip ceiling. If the engine
 // is far stronger than the ground, every meaningful throttle breaks traction and
 // a burnout cannot be recovered -- the driver has no usable band. ~1.25x keeps
@@ -142,7 +156,7 @@ export const KINETIC_FRACTION = 0.72;
 // How much harder the sled pulls once the cargo has fully slid forward onto the
 // ground skid. This is the real reason a pull gets heavier: the load does not
 // just sit there, it migrates and jams itself into the dirt.
-export const SHIFT_GAIN = 0.45;
+export const SHIFT_GAIN = 0.50;
 // Grip is not a switch. It climbs from the static value to a peak at a small
 // amount of slip, then decays to the kinetic value at full spin. Maximum pull --
 // and maximum nose lift -- lives at that small slip, which is why tractor pullers
@@ -248,27 +262,13 @@ function substep(state, input, dt) {
   const engaged = 1 - state.clutchPedal;
   const cap = engaged * CLUTCH_MAX_TQ;
   const gasTorque = engineTorque(state.gas, state.rpm);
-  const engineBrake = 12 + state.rpm * 0.02;
+  const engineBrake = engineBrakeNm(state.gas, state.rpm);
   const resist = resistForce(state);
 
   // Grip ceiling for the current surface and tyre wear. Static while the tyres
   // hold, kinetic once they slide.
   const ceiling = gripCeiling(state.condition, state.tireHealth);
   const effCeiling = ceiling * frictionScale(state.slip);
-
-  const groundForce = (demanded) => ({
-    pull: Math.min(demanded, effCeiling),
-    spinning: demanded > effCeiling + 1 || kinSpin,
-  });
-
-  // A wheel with no drive torque still gets dragged down by the ground while it is
-  // faster than the rig -- kinetic friction does not care that the engine let go.
-  // Without this a free wheel coasts at full speed forever after the throttle and
-  // clutch are both released. Scoped to a disconnected drivetrain on purpose:
-  // applying it as extra drawbar pull would hand over the full ceiling on every
-  // throttle lift and erase throttle modulation.
-  const slideBlend = clamp((state.wheelOmega * WHEEL_R - state.v) / 0.5, 0, 1);
-  const freeDrag = engaged < 0.05 ? effCeiling * slideBlend : 0;
 
   const slipAng = state.rpm * RPM2RAD - state.wheelOmega * GEAR;
   // Kinematic wheelspin: the tyres are physically faster than the ground,
@@ -278,6 +278,23 @@ function substep(state, input, dt) {
   // inflated wheel speed -- teleporting the vehicle forward and pumping free
   // momentum into it every time the clutch oscillates.
   const kinSpin = state.wheelOmega * WHEEL_R > state.v + 0.05;
+
+  // Ground reaction. The drawbar only ever sees what the drivetrain asks for,
+  // capped by the ceiling -- the arcade contract of this game: speed must be
+  // earned with clean traction, a wheelspin is a loss, not a launch. But the
+  // WHEEL is always dragged at the friction its slip buys while it is sliding:
+  // kinetic friction does not care that the throttle was chopped. Capping that
+  // drag at the demanded torque too let the tyres coast at full spin forever
+  // after a lift -- the engine torque was gone, and with it the only force that
+  // was ever allowed to slow them down.
+  const groundForce = (demanded) => {
+    const spinning = demanded > effCeiling + 1 || kinSpin;
+    return {
+      pull: Math.min(demanded, effCeiling),
+      wheelDrag: spinning ? effCeiling : 0,
+      spinning,
+    };
+  };
   const iEngineRef = ENGINE_I * GEAR * GEAR;
   const iVehicleRef = VEHICLE_KG * WHEEL_R * WHEEL_R;
   const iFull = iEngineRef + WHEEL_I + iVehicleRef;
@@ -287,6 +304,7 @@ function substep(state, input, dt) {
   const tcNeeded = gasTorque - engineBrake - ENGINE_I * aFull * GEAR;
 
   let clutchTorque;
+  let wheelDrag;
   let spinning;
   let pull;
 
@@ -303,7 +321,7 @@ function substep(state, input, dt) {
     state.clutchLocked = true;
     clutchTorque = tcNeeded;
     const demanded = (Math.max(0, clutchTorque) * GEAR) / WHEEL_R;
-    ({ pull, spinning } = groundForce(demanded));
+    ({ pull, wheelDrag, spinning } = groundForce(demanded));
 
     if (!wasLocked && Math.abs(slipAng) >= LOCK_EPS) {
       // Hook-up is a one-shot inelastic collision: angular momentum is conserved,
@@ -323,9 +341,11 @@ function substep(state, input, dt) {
       state.slip = 0;
     } else {
       // Tyres broke away: the ground only ever receives `pull`, the excess just
-      // spins the wheels and cooks the rubber.
+      // spins the wheels and cooks the rubber. The wheel itself is still dragged
+      // at the full sliding friction -- that is what stops the spin when the
+      // throttle is lifted.
       const iSpin = iEngineRef + WHEEL_I;
-      const net = (gasTorque - engineBrake) * GEAR - pull * WHEEL_R;
+      const net = (gasTorque - engineBrake) * GEAR - wheelDrag * WHEEL_R;
       state.wheelOmega = Math.max(0, state.wheelOmega + (net / iSpin) * dt);
       state.rpm = Math.max(0, state.wheelOmega * GEAR * RAD2RPM);
       state.v = Math.max(0, state.v + ((pull - resist) / VEHICLE_KG) * dt);
@@ -346,13 +366,13 @@ function substep(state, input, dt) {
     // free whenever the rig rolls faster than the engine.
     const clutchWheelTq = clutchTorque * GEAR;
     const demanded = Math.max(0, clutchWheelTq) / WHEEL_R;
-    ({ pull, spinning } = groundForce(demanded));
+    ({ pull, wheelDrag, spinning } = groundForce(demanded));
 
     const iWheel = spinning ? WHEEL_I : WHEEL_I + iVehicleRef;
-    const wheelLoad = spinning ? pull * WHEEL_R : resist * WHEEL_R;
+    const wheelLoad = spinning ? wheelDrag * WHEEL_R : resist * WHEEL_R;
     state.wheelOmega = Math.max(
       0,
-      state.wheelOmega + ((clutchWheelTq - wheelLoad - freeDrag * WHEEL_R) / iWheel) * dt,
+      state.wheelOmega + ((clutchWheelTq - wheelLoad) / iWheel) * dt,
     );
 
     if (spinning) {

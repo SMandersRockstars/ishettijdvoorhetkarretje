@@ -280,6 +280,38 @@ test('dumping the clutch destroys the run on loose surfaces', () => {
   }
 });
 
+test('chopping the throttle pulls the revs down hard', () => {
+  // A big diesel with the fuel cut is an air pump: compression braking must drag
+  // the revs towards idle within seconds, not crawl down at friction-only pace.
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  for (let i = 0; i < 120 && s.rpm < 2400; i += 1) stepSim(s, { gas: 1, clutchPedal: 1 }, DT);
+  assert.ok(s.rpm > 2000, `engine should be revved, got ${s.rpm}`);
+  for (let i = 0; i < 180; i += 1) stepSim(s, { gas: 0, clutchPedal: 1 }, DT);
+  assert.ok(s.rpm < 1400, `revs should fall hard within three seconds, still ${s.rpm}`);
+  assert.equal(s.status, 'pulling', 'a chop on a free engine must not stall it');
+  assert.ok(s.rpm > STALL_RPM, `governor must catch the engine, got ${s.rpm}`);
+});
+
+test('chopping the throttle stops a burnout instead of letting it coast', () => {
+  // Kinetic friction on a sliding tyre does not care what the drivetrain asks
+  // for: once the throttle is lifted the wheels must spin down against the
+  // ground, not keep smoking at full speed until the tread is gone.
+  const s = createSimState(WET);
+  s.status = 'pulling';
+  for (let i = 0; i < 90; i += 1) stepSim(s, { gas: 1, clutchPedal: 1 }, DT);
+  for (let i = 0; i < 60; i += 1) stepSim(s, { gas: 1, clutchPedal: 0 }, DT);
+  const w0 = s.wheelOmega;
+  assert.ok(w0 > 5, `expected a spun-up wheel, got ${w0}`);
+  for (let i = 0; i < 90; i += 1) stepSim(s, { gas: 0, clutchPedal: 0 }, DT);
+  assert.ok(
+    s.wheelOmega < 0.75 * w0,
+    `wheel should spin down hard after a chop, still ${s.wheelOmega.toFixed(2)} of ${w0.toFixed(2)}`,
+  );
+  assert.ok(s.slip < 0.3, `slip should clear after a chop, got ${s.slip}`);
+  assert.ok(s.tireHealth > 0.9, `a chop must save the tyres, got ${s.tireHealth}`);
+});
+
 // --------------------------------------------------------------- tyre wear
 
 test('mild slip costs no tread', () => {
