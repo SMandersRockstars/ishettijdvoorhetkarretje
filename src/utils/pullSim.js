@@ -185,6 +185,7 @@ export function createSimState(condition = TRACK_CONDITIONS[0]) {
     maxSlip: 0,
     noseAngle: 0,
     maxNose: 0,
+    smoke: 0,
     driveForce: 0, // N actually delivered at the drawbar
     tractionForce: 0, // N the ground will sustain right now
     gripCeilingN: ceiling,
@@ -375,6 +376,18 @@ function substep(state, input, dt) {
     1,
   );
   state.prevPull = pull;
+
+  // --- black smoke is unburnt diesel ---
+  // A big farm diesel runs rich when it is working hard, so the plume is a direct
+  // read on engine load: throttle, how hard the ground is being pulled against,
+  // lugging and wheelspin all make it thicker.
+  const isLugging = state.clutchLocked && state.rpm < 1100 && state.gas > 0.4;
+  const smokeTarget = clamp(
+    state.gas * (0.3 + 1.1 * loadRatio) + (isLugging ? 0.45 : 0) + state.slip * 0.25,
+    0,
+    1,
+  );
+  state.smoke += (smokeTarget - state.smoke) * clamp(dt * 3.5, 0, 1);
   state.wheelAngle += state.wheelOmega * dt;
   state.distance += state.v * dt;
   state.maxSlip = Math.max(state.maxSlip, state.slip);

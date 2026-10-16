@@ -6,13 +6,98 @@ const GROUND_Y = 352;
 const REAR_WHEEL = { cx: 600, cy: 300, r: 52 };
 const FRONT_WHEEL = { cx: 742, cy: 326, r: 26 };
 
-// The track is a dirt course in every condition — only the moisture changes.
-const TRACK_SURFACE = {
-  dry: '#7a4f24',
-  damp: '#5e3c1c',
-  wet: '#402a17',
-  mud: '#2e1e10',
+// The track is a dirt course in every condition -- only the moisture changes.
+// Each look is meant to be read at a glance: pale and dusty, dark and slick,
+// near-black with reflections, or churned to clods.
+export const TRACK_LOOK = {
+  dry: { base: '#a9763c', top: '#c9995a', tex: '#e0bd85', chip: '#f2dcae' },
+  damp: { base: '#6b451f', top: '#8a5c2e', tex: '#a87941', chip: '#e3b978' },
+  wet: { base: '#3a2818', top: '#52402c', tex: '#8fd6ff', chip: '#8fd6ff' },
+  mud: { base: '#22150a', top: '#33200f', tex: '#4d3218', chip: '#d09a63' },
 };
+
+// Deterministic pseudo-random so the texture scrolls smoothly instead of
+// flickering every frame.
+function hash(n) {
+  const x = Math.sin(n * 127.1) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function TrackBand({ conditionId, distance, pivotX }) {
+  const look = TRACK_LOOK[conditionId] || TRACK_LOOK.dry;
+  const items = [];
+  const startM = Math.floor(distance) - 6;
+  const endM = Math.ceil(distance) + 94;
+  for (let m = startM; m <= endM; m += 1) {
+    const x = pivotX + (m - distance) * PX_PER_M;
+    if (x < -40 || x > 1040) continue;
+    const h = hash(m);
+    if (conditionId === 'wet') {
+      // standing water reads as bright horizontal reflections plus glints
+      items.push(
+        <rect
+          key={m}
+          x={x}
+          y={GROUND_Y + 3 + h * 8}
+          width={12 + h * 16}
+          height={1.3}
+          fill={look.tex}
+          opacity={0.3 + h * 0.4}
+        />,
+      );
+      if (h > 0.7) {
+        items.push(
+          <circle key={`g${m}`} cx={x + 5} cy={GROUND_Y + 5} r={1.5} fill="#ffffff" opacity="0.75" />,
+        );
+      }
+    } else if (conditionId === 'mud') {
+      // churned clods heaped on the surface
+      items.push(
+        <ellipse
+          key={m}
+          cx={x + 5}
+          cy={GROUND_Y + 1 - h * 4}
+          rx={4 + h * 6}
+          ry={2.6 + h * 2.4}
+          fill={look.tex}
+          opacity={0.6 + h * 0.3}
+        />,
+      );
+    } else if (conditionId === 'damp') {
+      items.push(
+        <ellipse
+          key={m}
+          cx={x + 6}
+          cy={GROUND_Y + 6}
+          rx={8 + h * 9}
+          ry={2.4}
+          fill={look.tex}
+          opacity={0.16 + h * 0.16}
+        />,
+      );
+    } else {
+      // dry: pale dust dashes across hard-packed ground
+      items.push(
+        <rect
+          key={m}
+          x={x}
+          y={GROUND_Y + 2 + h * 5}
+          width={5 + h * 7}
+          height={1.6}
+          fill={look.tex}
+          opacity={0.28 + h * 0.3}
+        />,
+      );
+    }
+  }
+  return (
+    <g>
+      <rect x="0" y={GROUND_Y} width="1000" height="18" fill={look.base} opacity="0.95" />
+      <rect x="0" y={GROUND_Y} width="1000" height="4" fill={look.top} opacity="0.9" />
+      {items}
+    </g>
+  );
+}
 
 function Wheel({ cx, cy, r, angle, hub = '#3a3a3a' }) {
   const spokes = [0, 45, 90, 135];
@@ -194,6 +279,8 @@ export function PullScene({
   lugging = false,
   load01 = 0,
   loadShift = 0,
+  smoke = 0,
+  smokeParticles = [],
   condition = { id: 'dry' },
   reducedMotion = false,
 }) {
@@ -235,7 +322,7 @@ export function PullScene({
   }
 
   const dirtCount = reducedMotion ? 0 : Math.round(Math.min(1, slip / 0.5) * 12);
-  const exhaustCount = reducedMotion ? 0 : lugging ? 6 : 2;
+  const exhaustCount = reducedMotion ? 0 : Math.round(3 + Math.min(1, smoke) * 27);
   // The heavier the sled, the deeper the load digs in.
   const sink = load01 * 8;
   const rutDepth = 2 + load01 * 7;
@@ -264,8 +351,8 @@ export function PullScene({
       <rect x="0" y="0" width="1000" height={GROUND_Y} fill="url(#pullSky)" />
       <rect x="0" y={GROUND_Y} width="1000" height={420 - GROUND_Y} fill="url(#pullDirt)" />
 
-      {/* track surface strip — always dirt, just wetter or drier */}
-      <rect x="0" y={GROUND_Y} width="1000" height="6" fill={TRACK_SURFACE[condition.id] || TRACK_SURFACE.dry} opacity="0.9" />
+      {/* track surface strip — distinct look per condition */}
+      <TrackBand conditionId={condition.id} distance={distance} pivotX={pivotX} />
 
       {marks}
 
@@ -371,6 +458,28 @@ export function PullScene({
         ) : null}
       </g>
 
+      {/* ---- smoke trail: world-space, so the tractor pulls away from it ---- */}
+      {!reducedMotion && smokeParticles.length > 0 ? (
+        <g>
+          {smokeParticles.map((p) => {
+            const x = pivotX + (p.wd - distance) * PX_PER_M;
+            if (x < -120 || x > 1140) return null;
+            const t = Math.min(1, p.age / p.life);
+            const fade = (1 - t) * p.dark;
+            const shade = Math.round(6 + 26 * (1 - p.dark));
+            return (
+              <circle
+                key={p.id}
+                cx={x}
+                cy={p.y}
+                r={p.r}
+                fill={`rgba(${shade}, ${shade - 1 < 0 ? 0 : shade - 1}, ${shade - 2 < 0 ? 0 : shade - 2}, ${fade.toFixed(3)})`}
+              />
+            );
+          })}
+        </g>
+      ) : null}
+
       {/* ---- the tractor: whole body tips back on the reaction ---- */}
       <g transform={`rotate(${-noseAngle} ${pivotX} ${pivotY})`}>
         {/* chassis */}
@@ -389,16 +498,23 @@ export function PullScene({
         <rect x="668" y="150" width="11" height="76" fill="#4a4a4a" stroke="#1a1a1a" strokeWidth="1.5" />
         <rect x="665" y="144" width="17" height="8" fill="#2a2a2a" rx="2" />
         {/* exhaust smoke — lives INSIDE the body group so it follows the pipe when
-            the tractor tilts. Lazy grey at idle, thick black when lugging. */}
+            the tractor tilts. Density and thickness come from live engine load:
+            a thin grey puff at idle, a solid black wall when it is working. */}
         {!reducedMotion &&
           Array.from({ length: exhaustCount }).map((_, i) => (
             <circle
               key={`ex${i}`}
-              className={`pull-exhaust ${lugging ? 'is-lug' : ''}`}
-              cx={673.5 + (i % 3) * 2.5 - 2.5}
-              cy={142 - (i % 2) * 2}
-              r={4 + (i % 4) * 2}
-              style={{ animationDelay: `${i * 0.16}s` }}
+              className={`pull-exhaust ${smoke > 0.62 ? 'is-heavy' : ''} ${
+                lugging ? 'is-lug' : ''
+              }`}
+              cx={673.5 + ((i % 5) - 2) * 2.2}
+              cy={142 - (i % 3)}
+              r={(3.5 + (i % 5) * 1.9) * (0.75 + Math.min(1, smoke) * 0.85)}
+              style={{
+                animationDelay: `${(i % 9) * 0.11 + (i % 2) * 0.05}s`,
+                animationDuration: `${1.5 - Math.min(0.7, smoke * 0.7)}s`,
+                opacity: 0.35 + Math.min(1, smoke) * 0.6,
+              }}
             />
           ))}
         {/* rear fender */}

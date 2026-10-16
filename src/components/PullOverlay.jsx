@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { useEngineSound } from '../hooks/useEngineSound';
-import { PullScene } from './PullScene';
+import { PullScene, TRACK_LOOK } from './PullScene';
 import {
   TRACK_M,
   REDLINE_RPM,
@@ -62,6 +62,7 @@ function snapshot(s) {
     tractionForce: s.tractionForce,
     sledN: sledResistance(s),
     loadShift: s.loadShift,
+    smoke: s.smoke,
     ceilingN: s.gripCeilingN,
     condition: s.condition,
     gas: s.gas,
@@ -172,7 +173,15 @@ function Hud({ snap }) {
           <span className="pull-readout-value">{Math.round(snap.rpm)}</span>
           <span className="pull-readout-unit">rpm</span>
         </div>
-        <div className="pull-condition">{snap.condition.label}</div>
+        <div
+          className="pull-condition"
+          style={{
+            color: (TRACK_LOOK[snap.condition.id] || TRACK_LOOK.dry).chip,
+            borderColor: (TRACK_LOOK[snap.condition.id] || TRACK_LOOK.dry).chip,
+          }}
+        >
+          {snap.condition.label}
+        </div>
       </div>
 
       <div className="pull-gauges">
@@ -224,7 +233,15 @@ function ReadyScreen({ condition, highScore, onStart, onClose }) {
         </p>
         <p>3. Ride the edge of the grip. No smoke. No stalling. Just pull.</p>
       </div>
-      <div className="pull-condition-tag">TRACK: {condition.label}</div>
+      <div
+        className="pull-condition-tag"
+        style={{
+          color: (TRACK_LOOK[condition.id] || TRACK_LOOK.dry).chip,
+          borderColor: (TRACK_LOOK[condition.id] || TRACK_LOOK.dry).chip,
+        }}
+      >
+        TRACK: {condition.label}
+      </div>
       {highScore > 0 ? <div className="pull-highscore">HIGH SCORE: {highScore.toLocaleString()}</div> : null}
       <button className="pull-btn pull-btn-start" onClick={onStart}>
         START PULL
@@ -292,6 +309,12 @@ export function PullOverlay() {
     gasUp: false,
     gasDown: false,
   });
+  // Smoke lives in WORLD space, not body space. Emitted at the exhaust stack's
+  // world position, it stays behind as the tractor pulls away -- that is what makes
+  // a trail instead of a puff welded to the pipe.
+  const smokeRef = useRef([]);
+  const smokeAccRef = useRef(0);
+  const smokeIdRef = useRef(0);
   // Persistent pedal positions, ramped by whichever keys are held.
   const cmdRef = useRef({ clutchPressure: 0, gas: 0 });
   const rafRef = useRef(0);
@@ -356,6 +379,40 @@ export function PullOverlay() {
 
       stepSim(s, { gas: cmd.gas, clutchPedal: 1 - cmd.clutchPressure }, dt);
 
+      // --- smoke trail ---
+      // Stack top sits 6.125 m ahead of the rear axle (x 673.5 vs pivot 600, 12 px/m).
+      const parts = smokeRef.current;
+      if (!reduced) {
+        const rate = 16 + s.smoke * 85;
+        smokeAccRef.current += rate * dt;
+        while (smokeAccRef.current >= 1) {
+          smokeAccRef.current -= 1;
+          smokeIdRef.current += 1;
+          parts.push({
+            id: smokeIdRef.current,
+            wd: s.distance + 6.125 + (Math.random() - 0.5) * 0.1,
+            y: 138 + Math.random() * 6,
+            r: 3 + Math.random() * 4 + s.smoke * 5,
+            age: 0,
+            life: 1.8 + Math.random() * 1.8 + s.smoke * 1.6,
+            rise: 30 + Math.random() * 34 + s.smoke * 26,
+            grow: 11 + Math.random() * 13 + s.smoke * 16,
+            drift: -(0.2 + Math.random() * 0.5),
+            dark: 0.6 + Math.random() * 0.4,
+          });
+        }
+        for (const p of parts) {
+          p.age += dt;
+          p.y -= p.rise * dt;
+          p.r += p.grow * dt;
+          p.wd += p.drift * dt;
+          p.rise *= 1 - 0.3 * dt;
+          p.drift *= 1 - 0.25 * dt;
+        }
+        while (parts.length && parts[0].age >= parts[0].life) parts.shift();
+        if (parts.length > 320) parts.splice(0, parts.length - 320);
+      }
+
       if (soundOnRef.current) {
         sound.update({ rpm: s.rpm, gas: s.gas, slip: s.slip });
         if (s.clutchLocked && !wasLockedRef.current) sound.playHookup();
@@ -375,7 +432,11 @@ export function PullOverlay() {
 
   const startRun = useCallback(() => {
     stopLoop();
-    const s = createSimState(condition);
+    // Fresh track every pull. Randomising only on open meant "PULL AGAIN" replayed
+    // the same surface over and over.
+    const next = randomCondition();
+    setCondition(next);
+    const s = createSimState(next);
     s.status = 'pulling';
     simRef.current = s;
     inputRef.current = {
@@ -385,6 +446,8 @@ export function PullOverlay() {
       gasDown: false,
     };
     cmdRef.current = { clutchPressure: 0, gas: 0 };
+    smokeRef.current = [];
+    smokeAccRef.current = 0;
     wasLockedRef.current = false;
     lastRef.current = 0;
     setSnap(snapshot(s));
@@ -395,7 +458,7 @@ export function PullOverlay() {
       soundOnRef.current = true;
     }
     rafRef.current = requestAnimationFrame(tick);
-  }, [condition, initialized, sound, stopLoop, tick]);
+  }, [initialized, sound, stopLoop, tick]);
 
   const openOverlay = useCallback(() => {
     setCondition(randomCondition());
@@ -482,6 +545,8 @@ export function PullOverlay() {
             lugging={lugging}
             load01={load01}
             loadShift={snap.loadShift}
+            smoke={snap.smoke}
+            smokeParticles={smokeRef.current}
             condition={condition}
             reducedMotion={reduced}
           />
