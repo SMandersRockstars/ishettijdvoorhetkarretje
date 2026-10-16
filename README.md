@@ -72,6 +72,37 @@ Add entries to `overrides` with a `YYYY-MM-DD` date to set a custom start time f
 
 This is useful for testing the party time animations, effects, and seasonal themes.
 
+### 🚜 FULL PULL — tractor pulling minigame
+
+On the main page there is a **FULL PULL** button (bottom-left). It opens a full-screen
+overlay where you drag the company karretje 100 m down the track, tractor-pull style.
+
+Controls (keyboard only):
+
+| Key | Action |
+|-----|--------|
+| `A` / `←` | clutch — **held down = disengaged** |
+| `L` / `→` | gas — held down = on it |
+| `Space` | start / restart |
+| `Esc` | close |
+
+How to drive it: hold the clutch in, rev the engine, then let the clutch come up
+*slowly*. Release too fast and the engine is dragged down or over-revs and blows.
+Release too slowly and you stall. Once hooked up, ride the edge of grip — too much
+gas and the tyres break away, which buys you smoke, no distance and a tyre that
+destroys itself in about two seconds of full slip.
+
+The physics lives in `src/utils/pullSim.js` as a pure, framework-free module with a
+fixed internal timestep. It is covered by unit tests:
+
+```bash
+npm test          # node --test tests/*.test.js
+```
+
+High score is stored in `localStorage` under `karretje-full-pull-highscore`.
+Track grip is randomised per run (dry / damp / wet / mud). Sound is synthesised and
+respects the "volledige ervaring" gate; animation respects `prefers-reduced-motion`.
+
 ## Feedback en bijdragen!!
 
 Heb je ideeën voor verbeteringen, nieuwe functionaliteiten, of wil je gewoon meedenken over het karretje?  

@@ -16,6 +16,7 @@ import { FestiveIntro } from './components/FestiveIntro';
 import { FlyingImage } from './components/FlyingImage';
 import { GameOverlay } from './components/GameOverlay';
 import { PartyExplosion, BOOM_EVENT } from './components/PartyExplosion';
+import { PullOverlay } from './components/PullOverlay';
 import { isFriday } from './utils/timeUtils';
 import { Fan } from './components/Fan';
 
@@ -79,6 +80,7 @@ function AppContent() {
       <FestiveIntro />
       <FlyingImage />
       <GameOverlay />
+      <PullOverlay />
       <PartyExplosion />
       <ScreenShake />
       <Fan />
