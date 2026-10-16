@@ -366,6 +366,14 @@ export function PullScene({
   const wheelDeg = (wheelAngle * 180) / Math.PI % 360;
   const pivotX = REAR_WHEEL.cx;
   const pivotY = GROUND_Y;
+  // The tractor body pivots on the rear contact patch when the nose lifts, and
+  // the hitch travels with it. The chain has to be anchored to the rotated
+  // position or it visibly detaches from the drawbar mid-lift.
+  const ra = (-noseAngle * Math.PI) / 180;
+  const hitchDx = 552 - pivotX;
+  const hitchDy = 298 - pivotY;
+  const hitchX = pivotX + hitchDx * Math.cos(ra) - hitchDy * Math.sin(ra);
+  const hitchY = pivotY + hitchDx * Math.sin(ra) + hitchDy * Math.cos(ra);
   // Straining art once the cargo starts coming forward.
   const cartArt = (loadShift || 0) >= CART_HEAVY_AT ? CART_PHOTO_HEAVY : CART_PHOTO;
 
@@ -491,8 +499,8 @@ export function PullScene({
         >
           {/* chain from the tractor's drawbar to the cart's front post */}
           <Chain
-            x1={552}
-            y1={298}
+            x1={hitchX}
+            y1={hitchY}
             x2={cartArt.x + cartArt.w * 0.95}
             y2={300}
             sag={22 - Math.max(0, Math.min(1, load01)) * 18}

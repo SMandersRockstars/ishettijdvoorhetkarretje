@@ -427,7 +427,7 @@ export function PullOverlay() {
       }
       rafRef.current = requestAnimationFrame(tick);
     },
-    [finishRun, sound],
+    [finishRun, sound, reduced],
   );
 
   const startRun = useCallback(() => {

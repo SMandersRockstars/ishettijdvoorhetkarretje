@@ -9,6 +9,7 @@ import {
   OVER_REV_BLOW_S,
   TIRE_LIFE_AT_FULL_SLIP_S,
   TRACK_CONDITIONS,
+  WHEEL_R,
   createSimState,
   stepSim,
   torqueCurve,
@@ -16,6 +17,8 @@ import {
   computeTraction,
   gripCeiling,
   sledResistance,
+  frictionScale,
+  PEAK_SLIP,
   SLED_PLOW_K,
   scoreRun,
   resultFor,
@@ -200,22 +203,14 @@ test('track condition scales grip', () => {
   assert.ok(mud < dry * 0.8, `mud should be much looser: ${dry} -> ${mud}`);
 });
 
-test('for the same sled, a slipperier surface breaks away sooner', () => {
-  const run = (cond) => {
-    const s = createSimState(cond);
-    s.sledStartN = 6000;
-    s.sledFinishN = 12000;
-    s.status = 'pulling';
-    let t = 0;
-    for (let i = 0; i < 60 * 120 && s.status === 'pulling'; i += 1) {
-      t += DT;
-      stepSim(s, careless(t, s), DT);
-    }
-    return s.maxSlip;
-  };
-  const dry = run(DRY);
-  const wet = run(WET);
-  assert.ok(wet >= dry - 0.05, `wet should be slipperier: dry=${dry} wet=${wet}`);
+test('a slipperier surface breaks away at a lower drawbar force', () => {
+  // What breaks away is the grip ceiling, not the slip number. maxSlip depends on
+  // how long a run survives, so it says nothing useful about how loose the ground
+  // is -- a high-grip run that gets deep into the heavy zone slips harder than a
+  // loose run that never got going.
+  const ceil = (c) => gripCeiling(c, 1);
+  assert.ok(ceil(MUD) < ceil(WET), `mud ${ceil(MUD)} should be looser than wet ${ceil(WET)}`);
+  assert.ok(ceil(WET) < ceil(DRY), `wet ${ceil(WET)} should be looser than dry ${ceil(DRY)}`);
 });
 
 // At the line the sled plus its plough drag should sit just under what the ground
@@ -239,12 +234,22 @@ test('every surface ends with the load over the grip ceiling', () => {
   }
 });
 
-test('wet track slips at least as much as dry for the same driver', () => {
-  const dry = simulate(skilled, { condition: DRY, seconds: 90 });
-  const wet = simulate(skilled, { condition: WET, seconds: 90 });
+test('the friction curve is the same shape everywhere -- only the ceiling scales', () => {
+  // Peak grip lands at the same slip on every surface. The surface changes how much
+  // force that peak is worth, not where it sits.
+  const peak = frictionScale(PEAK_SLIP);
+  for (const c of TRACK_CONDITIONS) {
+    for (const slip of [0, 0.05, 0.2, 0.35, 0.5, 0.75, 1]) {
+      assert.ok(
+        frictionScale(slip) <= peak + 1e-9,
+        `${c.id}: slip ${slip} should not beat peak grip ${peak}`,
+      );
+    }
+  }
+  const atPeak = (c) => computeTraction(c, 1, 8000) * peak;
   assert.ok(
-    wet.maxSlip >= dry.maxSlip - 0.01,
-    `wet should be slipperier: dry=${dry.maxSlip} wet=${wet.maxSlip}`,
+    atPeak(WET) < atPeak(DRY),
+    `wet peak ${atPeak(WET)} should be below dry peak ${atPeak(DRY)}`,
   );
 });
 
@@ -484,6 +489,49 @@ test('a gentle clutch release hooks up at a higher engine speed than a dump', ()
   assert.ok(
     gentle.rpm > dump.rpm,
     `feathering should preserve revs: dump=${dump.rpm} feather=${gentle.rpm}`,
+  );
+});
+
+test('a slipping clutch conserves energy: spinning the engine up costs the rig', () => {
+  // Rolling at speed with the engine below wheel speed, clutch held in a shallow
+  // slip: the wheels drag the engine up, and Newton's third law says the rig must
+  // pay for it in speed. A clutch that only ever transmits positive torque to the
+  // wheels would spin the engine up for free (no engine braking).
+  const setup = () => {
+    const s = createSimState(DRY);
+    s.status = 'pulling';
+    s.v = 6;
+    s.wheelOmega = 6 / WHEEL_R;
+    s.rpm = IDLE_RPM;
+    s.gas = 0;
+    return s;
+  };
+  const slipping = setup();
+  const control = setup();
+  for (let i = 0; i < 60; i += 1) {
+    stepSim(slipping, { gas: 0, clutchPedal: 0.94 }, DT);
+    stepSim(control, { gas: 0, clutchPedal: 1 }, DT);
+  }
+  assert.ok(
+    slipping.rpm > control.rpm,
+    `wheels should drag the engine up: ${slipping.rpm} vs ${control.rpm}`,
+  );
+  assert.ok(
+    slipping.v < control.v - 0.1,
+    `engine braking through the slipping clutch must cost speed: ${slipping.v} vs ${control.v}`,
+  );
+});
+
+test('the published grip ceiling tracks tyre wear', () => {
+  const fresh = createSimState(DRY).gripCeilingN;
+  const s = simulate(careless, { seconds: 8 });
+  assert.ok(
+    s.gripCeilingN <= fresh + 1e-6,
+    `a run that cooked the tyres must publish a lower ceiling: ${s.gripCeilingN} vs ${fresh}`,
+  );
+  assert.ok(
+    Math.abs(s.gripCeilingN - gripCeiling(s.condition, s.tireHealth)) < 1e-6,
+    'ceiling must equal gripCeiling for the current tyre health',
   );
 });
 

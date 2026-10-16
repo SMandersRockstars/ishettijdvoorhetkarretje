@@ -47,7 +47,7 @@ const SLED_START_FRAC = 0.45;
 // Small on purpose. Almost all of the end-of-track heaviness now comes from the
 // cargo shift (SHIFT_GAIN), not from this ramp -- which is the real mechanism.
 // At full shift the line drag lands just under the grip ceiling.
-const SLED_FINISH_FRAC = 0.74;
+const SLED_FINISH_FRAC = 0.82;
 const SLED_CURVE = 2.0;
 // A real sled ploughs: drag it faster and it digs harder. Without this the tractor
 // banks speed early on the light end of the track and then coasts through the heavy
@@ -261,6 +261,15 @@ function substep(state, input, dt) {
     spinning: demanded > effCeiling + 1 || kinSpin,
   });
 
+  // A wheel with no drive torque still gets dragged down by the ground while it is
+  // faster than the rig -- kinetic friction does not care that the engine let go.
+  // Without this a free wheel coasts at full speed forever after the throttle and
+  // clutch are both released. Scoped to a disconnected drivetrain on purpose:
+  // applying it as extra drawbar pull would hand over the full ceiling on every
+  // throttle lift and erase throttle modulation.
+  const slideBlend = clamp((state.wheelOmega * WHEEL_R - state.v) / 0.5, 0, 1);
+  const freeDrag = engaged < 0.05 ? effCeiling * slideBlend : 0;
+
   const slipAng = state.rpm * RPM2RAD - state.wheelOmega * GEAR;
   // Kinematic wheelspin: the tyres are physically faster than the ground,
   // regardless of what the torque balance currently says. `spinning` must honour
@@ -330,14 +339,20 @@ function substep(state, input, dt) {
     // speeds converge, so there is never an impulse to reconcile afterwards.
     state.clutchLocked = false;
     clutchTorque = clamp(slipAng * CLUTCH_DAMP, -cap, cap);
-    const demanded = (Math.max(0, clutchTorque) * GEAR) / WHEEL_R;
+    // Newton's third law: the clutch torque acts on BOTH sides. The engine feels
+    // -clutchTorque below; the wheel must feel +clutchTorque*GEAR even when it is
+    // negative -- wheels driving the engine is engine braking. Clamping the
+    // negative half away on the wheel side only would spin the engine up for
+    // free whenever the rig rolls faster than the engine.
+    const clutchWheelTq = clutchTorque * GEAR;
+    const demanded = Math.max(0, clutchWheelTq) / WHEEL_R;
     ({ pull, spinning } = groundForce(demanded));
 
     const iWheel = spinning ? WHEEL_I : WHEEL_I + iVehicleRef;
     const wheelLoad = spinning ? pull * WHEEL_R : resist * WHEEL_R;
     state.wheelOmega = Math.max(
       0,
-      state.wheelOmega + ((demanded * WHEEL_R - wheelLoad) / iWheel) * dt,
+      state.wheelOmega + ((clutchWheelTq - wheelLoad - freeDrag * WHEEL_R) / iWheel) * dt,
     );
 
     if (spinning) {
@@ -407,6 +422,11 @@ function substep(state, input, dt) {
       state.status = 'burnout';
     }
   }
+
+  // Keep the published ceiling honest as the tread cooks: the HUD marks the grip
+  // limit on the load gauge and warns when the sled passes it, and worn rubber
+  // must move that mark instead of flattering the driver.
+  state.gripCeilingN = gripCeiling(state.condition, state.tireHealth);
 
   // --- over-rev ---
   if (state.rpm > REDLINE_RPM) {
