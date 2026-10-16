@@ -20,7 +20,7 @@ npm run build   # outputs to dist/
 docker compose up --build
 ```
 
-There is **no lint, test, or typecheck** configured. CI only validates `src/config.json` schema and builds the Docker image.
+There is **no lint or typecheck** configured. There **are** unit tests for the tractor-pull physics: `npm test` (Node's built-in runner, `tests/*.test.js`, zero extra dependencies). CI only validates `src/config.json` schema and builds the Docker image.
 
 ## Architecture
 
@@ -36,6 +36,18 @@ There is **no lint, test, or typecheck** configured. CI only validates `src/conf
 - `src/contexts/ThemeContext.jsx` — theme switching (including seasonal: wintersport, christmas)
 - `src/contexts/TimeContext.jsx` — party time logic, reads `src/config.json`
 - `src/contexts/CartLocationContext.jsx` — polls `/api/location`, drives CartMap
+
+### Minigames
+
+- **Duck hunt** — `GameOverlay.jsx` + `FlyingGameContext.jsx` + `useGameSounds.jsx`.
+- **FULL PULL** (tractor pulling) — `PullOverlay.jsx` (UI + loop), `PullScene.jsx`
+  (inline SVG side view), `utils/pullSim.js` (pure physics), `useEngineSound.js`
+  (one persistent AudioContext for the whole run), `styles/pull-game.css`.
+  Opened from the bottom-left FULL PULL button; overlay sits at z-index 10005 so the
+  Friday `PartyExplosion` still paints over it. Keep the physics in `pullSim.js` and
+  keep it framework-free — that is what makes it testable in `tests/pullSim.test.js`.
+  Note: `useEngineSound` must return a memoised object; a fresh object per render
+  makes cleanup effects re-run every frame and kills the animation loop.
 
 ### Party-time takeover
 

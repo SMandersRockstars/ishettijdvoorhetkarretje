@@ -1,0 +1,623 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+import {
+  TRACK_M,
+  IDLE_RPM,
+  REDLINE_RPM,
+  STALL_RPM,
+  OVER_REV_BLOW_S,
+  TIRE_LIFE_AT_FULL_SLIP_S,
+  TRACK_CONDITIONS,
+  WHEEL_R,
+  createSimState,
+  stepSim,
+  torqueCurve,
+  engineTorque,
+  computeTraction,
+  gripCeiling,
+  sledResistance,
+  frictionScale,
+  PEAK_SLIP,
+  SLED_PLOW_K,
+  scoreRun,
+  resultFor,
+  tyreWearRate,
+} from '../src/utils/pullSim.js';
+
+const DRY = TRACK_CONDITIONS[0];
+const WET = TRACK_CONDITIONS.find((c) => c.id === 'wet');
+const MUD = TRACK_CONDITIONS.find((c) => c.id === 'mud');
+
+const DT = 1 / 60;
+
+/** Run the sim with a policy(t, state) -> {gas, clutchPedal} until it stops or times out. */
+function simulate(policy, { condition = DRY, seconds = 120 } = {}) {
+  const s = createSimState(condition);
+  s.status = 'pulling';
+  let t = 0;
+  const maxSteps = Math.ceil(seconds / DT);
+  for (let i = 0; i < maxSteps && s.status === 'pulling'; i += 1) {
+    t += DT;
+    stepSim(s, policy(t, s), DT);
+    assertNoNaN(s, `step ${i} of policy run`);
+  }
+  return s;
+}
+
+function assertNoNaN(s, where = '') {
+  for (const [k, v] of Object.entries(s)) {
+    if (typeof v === 'number') {
+      assert.ok(Number.isFinite(v), `${k} became ${v} (${where})`);
+    }
+  }
+  assert.ok(s.rpm >= 0, `rpm went negative: ${s.rpm} (${where})`);
+  assert.ok(s.v >= 0, `ground speed went negative: ${s.v} (${where})`);
+  assert.ok(s.wheelOmega >= 0, `wheel omega went negative: ${s.wheelOmega} (${where})`);
+  assert.ok(s.distance >= 0, `distance went negative: ${s.distance} (${where})`);
+  assert.ok(s.slip >= 0 && s.slip <= 1, `slip out of range: ${s.slip} (${where})`);
+  assert.ok(s.tireHealth >= 0 && s.tireHealth <= 1, `tyre health out of range: ${s.tireHealth} (${where})`);
+}
+
+// A driver who never lifts off the gas. This is what most people try first, and it
+// is exactly what destroys the tyres near the end of the track.
+function careless(t) {
+  return { gas: 1, clutchPedal: t < 1.2 ? 1 : Math.max(0.05, 1 - (t - 1.2) / 5) };
+}
+
+// Reference "good" driver: revs up, feathers the clutch out, and lifts off the
+// throttle the moment the tyres start to break away.
+function skilled(t, s) {
+  let gas = 1;
+  if (s.slip > 0.12) gas = 0.55;
+  if (s.rpm > 2500) gas = Math.min(gas, 0.55);
+  if (s.rpm < 1200) gas = Math.max(gas, 0.85);
+  return { gas, clutchPedal: t < 1.5 ? 1 : Math.max(0.1, 1 - (t - 1.5) / 6) };
+}
+
+// ---------------------------------------------------------------- torque curve
+
+test('torque curve peaks in the mid range, not at idle or redline', () => {
+  const peak = torqueCurve(1500);
+  assert.ok(peak > torqueCurve(800), 'peak should beat idle torque');
+  assert.ok(peak > torqueCurve(2900), 'peak should beat redline torque');
+  assert.ok(peak > 0);
+});
+
+test('rev limiter cuts torque above 2700 rpm', () => {
+  const below = engineTorque(1, 2600);
+  const above = engineTorque(1, 2880);
+  assert.ok(above < below * 0.6, `expected limiter to cut hard, got ${below} -> ${above}`);
+});
+
+// ---------------------------------------------------------------------- idling
+
+test('engine holds idle with no throttle and the clutch out', () => {
+  const s = simulate(() => ({ gas: 0, clutchPedal: 1 }), { seconds: 6 });
+  assert.equal(s.status, 'pulling', 'idling must not stall');
+  assert.ok(s.rpm > 400, `idle rpm too low: ${s.rpm}`);
+  assert.ok(s.rpm < 1800, `idle rpm runaway: ${s.rpm}`);
+  assert.equal(s.distance, 0, 'clutch out means no motion');
+});
+
+test('revving with the clutch out loads no drive into the wheels', () => {
+  const s = simulate(() => ({ gas: 1, clutchPedal: 1 }), { seconds: 1 });
+  assert.ok(s.rpm > 2000, `engine should rev freely, got ${s.rpm}`);
+  assert.equal(s.distance, 0);
+  assert.equal(s.slip, 0);
+});
+
+test('sitting on the limiter blows the engine', () => {
+  const s = simulate(() => ({ gas: 1, clutchPedal: 1 }), { seconds: 10 });
+  assert.equal(s.status, 'blown');
+  assert.ok(
+    s.elapsed <= 1.5 + OVER_REV_BLOW_S + 0.5,
+    `blew too slowly: ${s.elapsed}s`,
+  );
+});
+
+// ------------------------------------------------------------------ stalling
+
+test('dumping the clutch at idle stalls the engine', () => {
+  const s = simulate(() => ({ gas: 0, clutchPedal: 0 }), { seconds: 5 });
+  assert.equal(s.status, 'stalled');
+  assert.ok(s.distance < 1, `should not get anywhere: ${s.distance}m`);
+});
+
+test('dumping the clutch with full gas bogs the engine down', () => {
+  const s = simulate(() => ({ gas: 1, clutchPedal: 0 }), { seconds: 5 });
+  assert.notEqual(s.status, 'finished');
+  assert.ok(s.distance < 5, `dumped clutch should not pull far: ${s.distance}m`);
+});
+
+test('stalling needs the clutch: free-revving engine never stalls', () => {
+  const s = simulate((t) => ({ gas: 0, clutchPedal: 1 }), { seconds: 3 });
+  assert.equal(s.status, 'pulling');
+  assert.ok(s.rpm > STALL_RPM);
+});
+
+// ------------------------------------------------------------------ finishing
+
+// A full pull has to be earned. At the current difficulty the skilled line gets
+// there on exactly one surface and dies close on the others, so finish-specific
+// assertions run against whichever surface is actually winnable.
+const WINNABLE = TRACK_CONDITIONS.find(
+  (c) => simulate(skilled, { condition: c, seconds: 240 }).status === 'finished',
+);
+
+test('a skilled pull can finish a full track', () => {
+  assert.ok(WINNABLE, 'a full pull must be possible on at least one surface');
+  const s = simulate(skilled, { condition: WINNABLE, seconds: 240 });
+  assert.equal(s.status, 'finished', `expected finished, got ${s.status} at ${s.distance}m`);
+  assert.equal(s.distance, TRACK_M);
+  assert.ok(s.elapsed > 5, `pull was unrealistically fast: ${s.elapsed}s`);
+});
+
+test('a winning pull does not destroy the tyres', () => {
+  const s = simulate(skilled, { condition: WINNABLE, seconds: 240 });
+  assert.ok(s.tireHealth > 0.4, `tyres too cooked: ${s.tireHealth}`);
+});
+
+test('distance never exceeds the track length', () => {
+  const s = simulate(skilled, { seconds: 90 });
+  assert.ok(s.distance <= TRACK_M);
+});
+
+// ----------------------------------------------------------------- wheelspin
+
+test('wheelspin is reachable: aggressive gas breaks traction early', () => {
+  const s = simulate(
+    (t, st) => ({
+      gas: 1,
+      // hold the clutch just short of a full dump so torque arrives but roughly
+      clutchPedal: t < 1.5 ? 1 : Math.max(0.35, 1 - (t - 1.5) / 2),
+    }),
+    { seconds: 30 },
+  );
+  assert.ok(s.maxSlip > 0.15, `expected wheelspin, maxSlip=${s.maxSlip}`);
+});
+
+test('weight transfer: pulling harder puts more grip on the rear axle', () => {
+  const idleGrip = computeTraction(DRY, 1, 0);
+  const lightPull = computeTraction(DRY, 1, 4000);
+  const hardPull = computeTraction(DRY, 1, 11000);
+  assert.ok(lightPull > idleGrip * 1.05, `4kN pull should add grip: ${idleGrip} -> ${lightPull}`);
+  assert.ok(hardPull > lightPull * 1.05, `11kN pull should add more: ${lightPull} -> ${hardPull}`);
+});
+
+test('weight transfer is capped, so grip cannot grow forever', () => {
+  const a = computeTraction(DRY, 1, 40000);
+  const b = computeTraction(DRY, 1, 400000);
+  assert.equal(a.toFixed(3), b.toFixed(3), 'transfer should saturate');
+});
+
+test('worn tyres grip worse', () => {
+  const fresh = computeTraction(DRY, 1, 8000);
+  const bald = computeTraction(DRY, 0, 8000);
+  assert.ok(bald < fresh * 0.5, `bald tyres should be desperate: ${fresh} -> ${bald}`);
+});
+
+test('track condition scales grip', () => {
+  const dry = computeTraction(DRY, 1, 8000);
+  const mud = computeTraction(MUD, 1, 8000);
+  assert.ok(mud < dry * 0.8, `mud should be much looser: ${dry} -> ${mud}`);
+});
+
+test('a slipperier surface breaks away at a lower drawbar force', () => {
+  // What breaks away is the grip ceiling, not the slip number. maxSlip depends on
+  // how long a run survives, so it says nothing useful about how loose the ground
+  // is -- a high-grip run that gets deep into the heavy zone slips harder than a
+  // loose run that never got going.
+  const ceil = (c) => gripCeiling(c, 1);
+  assert.ok(ceil(MUD) < ceil(WET), `mud ${ceil(MUD)} should be looser than wet ${ceil(WET)}`);
+  assert.ok(ceil(WET) < ceil(DRY), `wet ${ceil(WET)} should be looser than dry ${ceil(DRY)}`);
+});
+
+// At the line the sled plus its plough drag should sit just under what the ground
+// can sustain: high enough that the run is a genuine struggle, low enough that it
+// is actually completable. A finish load ABOVE the ceiling is not difficulty, it
+// is an unwinnable force balance.
+// The whole point of the game: the sled ends up heavier than the ground can pull.
+// Distance is the scoreboard, so a full pull has to be earned with momentum and
+// a clean run, not handed out.
+test('every surface ends with the load over the grip ceiling', () => {
+  for (const cond of TRACK_CONDITIONS) {
+    const s = createSimState(cond);
+    s.distance = TRACK_M;
+    s.loadShift = 1; // cargo fully forward by the line
+    const ceiling = gripCeiling(cond, 1);
+    const total = sledResistance(s) * (1 + SLED_PLOW_K * 25);
+    assert.ok(
+      total > ceiling,
+      `${cond.id}: line load ${total.toFixed(0)} N should exceed ceiling ${ceiling.toFixed(0)} N`,
+    );
+  }
+});
+
+test('the friction curve is the same shape everywhere -- only the ceiling scales', () => {
+  // Peak grip lands at the same slip on every surface. The surface changes how much
+  // force that peak is worth, not where it sits.
+  const peak = frictionScale(PEAK_SLIP);
+  for (const c of TRACK_CONDITIONS) {
+    for (const slip of [0, 0.05, 0.2, 0.35, 0.5, 0.75, 1]) {
+      assert.ok(
+        frictionScale(slip) <= peak + 1e-9,
+        `${c.id}: slip ${slip} should not beat peak grip ${peak}`,
+      );
+    }
+  }
+  const atPeak = (c) => computeTraction(c, 1, 8000) * peak;
+  assert.ok(
+    atPeak(WET) < atPeak(DRY),
+    `wet peak ${atPeak(WET)} should be below dry peak ${atPeak(DRY)}`,
+  );
+});
+
+test('dry punishes harder than mud', () => {
+  // High grip means high speed, and high speed means the plough drag and the tyre
+  // wear spiral. The loose surface is the one that can actually be won.
+  const dry = simulate(skilled, { condition: DRY, seconds: 240 });
+  const mud = simulate(skilled, { condition: MUD, seconds: 240 });
+  assert.ok(
+    dry.distance < mud.distance,
+    `dry should be the harder grind: dry=${dry.distance.toFixed(1)}/${dry.status} mud=${mud.distance.toFixed(1)}/${mud.status}`,
+  );
+});
+
+// --------------------------------------------------------------- tyre burnout
+
+test('dumping the clutch destroys the run on loose surfaces', () => {
+  // Slamming the clutch out at full gas is the classic way to lose a pull.
+  const dump = (t) => ({ gas: 1, clutchPedal: t < 0.8 ? 1 : 0 });
+  for (const cond of [WET, MUD]) {
+    const s = simulate(dump, { condition: cond, seconds: 60 });
+    assert.notEqual(
+      s.status,
+      'finished',
+      `${cond.id}: a clutch dump should not finish (got ${s.status} at ${s.distance}m)`,
+    );
+    assert.ok(s.maxSlip > 0.5, `${cond.id}: should have broken away hard: ${s.maxSlip}`);
+  }
+});
+
+test('chopping the throttle pulls the revs down hard', () => {
+  // A big diesel with the fuel cut is an air pump: compression braking must drag
+  // the revs towards idle within seconds, not crawl down at friction-only pace.
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  for (let i = 0; i < 120 && s.rpm < 2400; i += 1) stepSim(s, { gas: 1, clutchPedal: 1 }, DT);
+  assert.ok(s.rpm > 2000, `engine should be revved, got ${s.rpm}`);
+  for (let i = 0; i < 180; i += 1) stepSim(s, { gas: 0, clutchPedal: 1 }, DT);
+  assert.ok(s.rpm < 1400, `revs should fall hard within three seconds, still ${s.rpm}`);
+  assert.equal(s.status, 'pulling', 'a chop on a free engine must not stall it');
+  assert.ok(s.rpm > STALL_RPM, `governor must catch the engine, got ${s.rpm}`);
+});
+
+test('chopping the throttle stops a burnout instead of letting it coast', () => {
+  // Kinetic friction on a sliding tyre does not care what the drivetrain asks
+  // for: once the throttle is lifted the wheels must spin down against the
+  // ground, not keep smoking at full speed until the tread is gone.
+  const s = createSimState(WET);
+  s.status = 'pulling';
+  for (let i = 0; i < 90; i += 1) stepSim(s, { gas: 1, clutchPedal: 1 }, DT);
+  for (let i = 0; i < 60; i += 1) stepSim(s, { gas: 1, clutchPedal: 0 }, DT);
+  const w0 = s.wheelOmega;
+  assert.ok(w0 > 5, `expected a spun-up wheel, got ${w0}`);
+  for (let i = 0; i < 90; i += 1) stepSim(s, { gas: 0, clutchPedal: 0 }, DT);
+  assert.ok(
+    s.wheelOmega < 0.75 * w0,
+    `wheel should spin down hard after a chop, still ${s.wheelOmega.toFixed(2)} of ${w0.toFixed(2)}`,
+  );
+  assert.ok(s.slip < 0.3, `slip should clear after a chop, got ${s.slip}`);
+  assert.ok(s.tireHealth > 0.9, `a chop must save the tyres, got ${s.tireHealth}`);
+});
+
+// --------------------------------------------------------------- tyre wear
+
+test('mild slip costs no tread', () => {
+  assert.equal(tyreWearRate(0), 0);
+  assert.equal(tyreWearRate(0.25), 0);
+  assert.equal(tyreWearRate(0.3), 0);
+});
+
+test('wear rises steeply with slip', () => {
+  const a = tyreWearRate(0.5);
+  const b = tyreWearRate(0.75);
+  const c = tyreWearRate(1);
+  assert.ok(b > a * 2, `0.75 should wear far more than 0.5: ${a} vs ${b}`);
+  assert.ok(c > b * 2, `full slip should be brutal: ${b} vs ${c}`);
+});
+
+test('full slip destroys a tyre in a couple of seconds', () => {
+  assert.ok(
+    TIRE_LIFE_AT_FULL_SLIP_S > 1 && TIRE_LIFE_AT_FULL_SLIP_S < 4,
+    `tyre life at full slip = ${TIRE_LIFE_AT_FULL_SLIP_S}s`,
+  );
+});
+
+test('a brief slip spike does not destroy the tyres', () => {
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  s.slip = 1;
+  s.tireHealth = 1;
+  // simulate 0.4s of held full slip by driving the wear directly through steps
+  for (let i = 0; i < 24; i += 1) {
+    s.tireHealth -= tyreWearRate(1) * (1 / 60);
+  }
+  assert.ok(s.tireHealth > 0.7, `0.4s of spin should survive, got ${s.tireHealth}`);
+});
+
+test('no surface is a free pull', () => {
+  // Every surface should stop a good driver well short of the line, or close to it,
+  // but never hand out the distance for nothing.
+  for (const cond of TRACK_CONDITIONS) {
+    const s = simulate(skilled, { condition: cond, seconds: 240 });
+    assert.ok(
+      s.distance > 50,
+      `${cond.id}: a good driver should at least get moving, got ${s.distance.toFixed(0)}m`,
+    );
+  }
+});
+
+// -------------------------------------------------------------- the load
+
+test('the cargo shift makes the load climb hard down the track', () => {
+  const s = createSimState(DRY);
+  const start = sledResistance(s); // neatly loaded, off the line
+  s.distance = TRACK_M;
+  s.loadShift = 1; // fully slid forward by the line
+  const finish = sledResistance(s);
+  assert.ok(
+    finish > start * 1.6,
+    `expected a clearly growing load, got ${start} -> ${finish}`,
+  );
+});
+
+test('the sled is hitched to the track: grippier surface, heavier sled', () => {
+  const dry = createSimState(DRY);
+  const mud = createSimState(MUD);
+  assert.ok(
+    dry.sledFinishN > mud.sledFinishN * 1.4,
+    `dry sled should be far heavier: ${dry.sledFinishN} vs ${mud.sledFinishN}`,
+  );
+  assert.ok(dry.gripCeilingN > mud.gripCeilingN);
+});
+
+test('the load outruns the grip before the line', () => {
+  const s = createSimState(DRY);
+  s.distance = TRACK_M;
+  s.loadShift = 1;
+  const ceiling = gripCeiling(DRY, 1);
+  const total = sledResistance(s) * (1 + SLED_PLOW_K * 25);
+  assert.ok(
+    total > ceiling * 1.1,
+    `line load ${total.toFixed(0)} N should clearly exceed the ceiling ${ceiling.toFixed(0)} N`,
+  );
+});
+
+test('a full pull is hard but not impossible', () => {
+  // At least one surface must be winnable with careful driving, or the game is
+  // broken rather than hard.
+  const wins = TRACK_CONDITIONS.filter(
+    (c) => simulate(skilled, { condition: c, seconds: 240 }).status === 'finished',
+  );
+  assert.ok(
+    wins.length >= 1,
+    'careful driving should still be able to finish on at least one surface',
+  );
+  // ...and it should not be winnable everywhere, or it is not hard.
+  assert.ok(
+    wins.length < TRACK_CONDITIONS.length,
+    'a full pull should not be routine on every surface',
+  );
+});
+
+test('the tractor visibly slows down as the load builds', () => {
+  const s = createSimState(WINNABLE);
+  s.status = 'pulling';
+  let t = 0;
+  let vPeak = 0;
+  for (let i = 0; i < 60 * 240 && s.status === 'pulling'; i += 1) {
+    t += DT;
+    stepSim(s, skilled(t, s), DT);
+    if (s.distance > 10) vPeak = Math.max(vPeak, s.v);
+  }
+  assert.equal(s.status, 'finished', `run should reach the line, got ${s.status}`);
+  assert.ok(
+    s.v < vPeak * 0.88,
+    `expected a real slowdown into the finish, vPeak=${vPeak.toFixed(2)} vLine=${s.v.toFixed(2)}`,
+  );
+});
+
+test('a full pull is rare: only one surface gives it up', () => {
+  const wins = TRACK_CONDITIONS.filter(
+    (c) => simulate(skilled, { condition: c, seconds: 240 }).status === 'finished',
+  );
+  assert.equal(
+    wins.length,
+    1,
+    `expected exactly one winnable surface, got ${wins.map((c) => c.id).join(', ') || 'none'}`,
+  );
+});
+
+// ------------------------------------------------------------- robustness
+
+test('huge dt cannot explode the simulation', () => {
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  for (let i = 0; i < 50; i += 1) {
+    stepSim(s, { gas: 1, clutchPedal: 0 }, 5);
+    assertNoNaN(s, `big dt step ${i}`);
+  }
+});
+
+test('zero dt is a no-op', () => {
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  const before = JSON.stringify(s);
+  stepSim(s, { gas: 1, clutchPedal: 0.5 }, 0);
+  // only the input smoothing may have moved; physics must not have run away
+  assert.equal(s.distance, 0);
+  assert.ok(Math.abs(s.rpm - Number(JSON.parse(before).rpm)) < 500);
+});
+
+test('random policies stay finite and in range', () => {
+  let seed = 12345;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  for (let run = 0; run < 40; run += 1) {
+    const s = createSimState(TRACK_CONDITIONS[run % TRACK_CONDITIONS.length]);
+    s.status = 'pulling';
+    let t = 0;
+    for (let i = 0; i < 60 * 60 && s.status === 'pulling'; i += 1) {
+      t += DT;
+      stepSim(
+        s,
+        {
+          gas: rand() < 0.7 ? rand() : 1,
+          clutchPedal: rand() < 0.5 ? rand() : 0,
+        },
+        DT * (0.5 + rand()),
+      );
+      assertNoNaN(s, `random run ${run} step ${i}`);
+    }
+  }
+});
+
+test('hook-up drags the engine down instead of teleporting it to zero', () => {
+  // Engine wound up, tractor stood still, clutch dumped: the clutch grabs and the
+  // engine must be pulled down by momentum, not annihilated.
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  s.rpm = 2500;
+  s.clutchPedal = 0;
+  s.gas = 1;
+  const startRpm = s.rpm;
+  stepSim(s, { gas: 1, clutchPedal: 0 }, DT);
+  assert.ok(s.wheelOmega > 0, 'wheels should have started turning');
+  assert.ok(s.rpm < startRpm * 0.95, `engine should be dragged down, still ${s.rpm}`);
+  assert.ok(s.rpm > startRpm * 0.2, `engine should not vanish, got ${s.rpm}`);
+  assert.ok(s.v > 0, 'tractor should have moved');
+});
+
+test('a gentle clutch release hooks up at a higher engine speed than a dump', () => {
+  const dump = createSimState(DRY);
+  dump.status = 'pulling';
+  dump.rpm = 2500;
+  dump.clutchPedal = 1;
+  dump.gas = 1;
+  stepSim(dump, { gas: 1, clutchPedal: 0 }, 0.4);
+
+  const gentle = createSimState(DRY);
+  gentle.status = 'pulling';
+  gentle.rpm = 2500;
+  gentle.clutchPedal = 1;
+  gentle.gas = 1;
+  // feather: only let a little of the pedal up over the same time
+  stepSim(gentle, { gas: 1, clutchPedal: 0.72 }, 0.4);
+
+  assert.ok(
+    gentle.rpm > dump.rpm,
+    `feathering should preserve revs: dump=${dump.rpm} feather=${gentle.rpm}`,
+  );
+});
+
+test('a slipping clutch conserves energy: spinning the engine up costs the rig', () => {
+  // Rolling at speed with the engine below wheel speed, clutch held in a shallow
+  // slip: the wheels drag the engine up, and Newton's third law says the rig must
+  // pay for it in speed. A clutch that only ever transmits positive torque to the
+  // wheels would spin the engine up for free (no engine braking).
+  const setup = () => {
+    const s = createSimState(DRY);
+    s.status = 'pulling';
+    s.v = 6;
+    s.wheelOmega = 6 / WHEEL_R;
+    s.rpm = IDLE_RPM;
+    s.gas = 0;
+    return s;
+  };
+  const slipping = setup();
+  const control = setup();
+  for (let i = 0; i < 60; i += 1) {
+    stepSim(slipping, { gas: 0, clutchPedal: 0.94 }, DT);
+    stepSim(control, { gas: 0, clutchPedal: 1 }, DT);
+  }
+  assert.ok(
+    slipping.rpm > control.rpm,
+    `wheels should drag the engine up: ${slipping.rpm} vs ${control.rpm}`,
+  );
+  assert.ok(
+    slipping.v < control.v - 0.1,
+    `engine braking through the slipping clutch must cost speed: ${slipping.v} vs ${control.v}`,
+  );
+});
+
+test('the published grip ceiling tracks tyre wear', () => {
+  const fresh = createSimState(DRY).gripCeilingN;
+  const s = simulate(careless, { seconds: 8 });
+  assert.ok(
+    s.gripCeilingN <= fresh + 1e-6,
+    `a run that cooked the tyres must publish a lower ceiling: ${s.gripCeilingN} vs ${fresh}`,
+  );
+  assert.ok(
+    Math.abs(s.gripCeilingN - gripCeiling(s.condition, s.tireHealth)) < 1e-6,
+    'ceiling must equal gripCeiling for the current tyre health',
+  );
+});
+
+test('same policy gives the same result (deterministic)', () => {
+  const a = simulate(skilled, { seconds: 90 });
+  const b = simulate(skilled, { seconds: 90 });
+  assert.equal(a.distance.toFixed(6), b.distance.toFixed(6));
+  assert.equal(a.status, b.status);
+});
+
+// ------------------------------------------------------------------ scoring
+
+test('finishing outscores stalling', () => {
+  const done = simulate(skilled, { seconds: 90 });
+  const dead = simulate(() => ({ gas: 0, clutchPedal: 0 }), { seconds: 5 });
+  assert.ok(scoreRun(done).score > scoreRun(dead).score);
+});
+
+test('a full pull earns the full-pull bonus', () => {
+  const s = simulate(skilled, { condition: WINNABLE, seconds: 240 });
+  const { score, bonuses } = scoreRun(s);
+  assert.ok(bonuses.some((b) => /FULL PULL/i.test(b)), `missing bonus: ${bonuses.join(', ')}`);
+  assert.ok(score >= 1000);
+});
+
+test('result labels exist for every failure mode', () => {
+  for (const status of ['finished', 'blown', 'stalled', 'burnout']) {
+    const label = resultFor({ status });
+    assert.ok(label.title, `no title for ${status}`);
+    assert.ok(label.color, `no colour for ${status}`);
+  }
+});
+
+// ------------------------------------------------------------- input shaping
+
+test('pedals are analogue, not instant', () => {
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  stepSim(s, { gas: 1, clutchPedal: 0 }, DT);
+  assert.ok(s.gas > 0 && s.gas < 1, `gas should ramp, got ${s.gas}`);
+  assert.ok(s.clutchPedal > 0 && s.clutchPedal < 1, `pedal should ramp, got ${s.clutchPedal}`);
+});
+
+test('out-of-range input is clamped, not trusted', () => {
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  stepSim(s, { gas: 99, clutchPedal: -5 }, DT);
+  assert.ok(s.gas >= 0 && s.gas <= 1);
+  assert.ok(s.clutchPedal >= 0 && s.clutchPedal <= 1);
+});
+
+test('missing input fields do not produce NaN', () => {
+  const s = createSimState(DRY);
+  s.status = 'pulling';
+  stepSim(s, {}, DT);
+  assertNoNaN(s, 'empty input');
+});

@@ -72,6 +72,50 @@ Add entries to `overrides` with a `YYYY-MM-DD` date to set a custom start time f
 
 This is useful for testing the party time animations, effects, and seasonal themes.
 
+### 🚜 FULL PULL — tractor pulling minigame
+
+On the main page there is a **FULL PULL** button (bottom-left). It opens a full-screen
+overlay where you drag the company karretje 100 m down the track, tractor-pull style.
+
+Controls (keyboard only):
+
+| Key | Action |
+|-----|--------|
+| `A` / `←` | clutch — **held down = disengaged** |
+| `L` / `→` | gas — held down = on it |
+| `Space` | start / restart |
+| `Esc` | close |
+
+How to drive it: hold the clutch in, rev the engine, then let the clutch come up
+*slowly*. Release too fast and the engine is dragged down or over-revs and blows.
+Release too slowly and you stall. Once hooked up, ride the edge of grip — too much
+gas and the tyres break away, which buys you smoke, no distance and a tyre that
+destroys itself in about two seconds of full slip.
+
+The physics lives in `src/utils/pullSim.js` as a pure, framework-free module with a
+fixed internal timestep. It is covered by unit tests:
+
+```bash
+npm test          # node --test tests/*.test.js
+```
+
+**Why the load bites.** The sled is hitched to what the track can give: it starts at
+about 55–60% of the surface's grip ceiling and digs down to roughly 125% of it over
+the 100 m. A sled that heavy cannot be dragged at speed, so the tractor bleeds speed
+all the way to the line — expect to cross at roughly 75% of your peak speed. A sled
+also ploughs: drag it faster and it digs harder, which is what stops you banking
+speed early on the light end of the track and coasting through the heavy end.
+
+Because the finish load exceeds the grip ceiling, mashing the throttle is not a
+strategy — it just cooks the tyres 10–20 m short of the line. Lift off when the tyres
+break away.
+
+High score is stored in `localStorage` under `karretje-full-pull-highscore`.
+Track grip is randomised per run (packed dirt / damp / wet / mud) and the sled is
+rescaled to match, so every surface is a fight rather than some being free wins.
+Sound is synthesised and respects the "volledige ervaring" gate; animation respects
+`prefers-reduced-motion`.
+
 ## Feedback en bijdragen!!
 
 Heb je ideeën voor verbeteringen, nieuwe functionaliteiten, of wil je gewoon meedenken over het karretje?  
