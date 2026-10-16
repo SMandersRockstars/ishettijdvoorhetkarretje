@@ -44,7 +44,10 @@ const LOCK_EPS = 0.5; // rad/s of engine/wheel mismatch treated as "already coup
 // half the grip ceiling and digs down to well past it. A fixed sled weight is
 // invisible — either the tractor never feels it, or nothing could ever move it.
 const SLED_START_FRAC = 0.45;
-const SLED_FINISH_FRAC = 0.8;
+// Small on purpose. Almost all of the end-of-track heaviness now comes from the
+// cargo shift (SHIFT_GAIN), not from this ramp -- which is the real mechanism.
+// At full shift the line drag lands just under the grip ceiling.
+const SLED_FINISH_FRAC = 0.74;
 const SLED_CURVE = 2.0;
 // A real sled ploughs: drag it faster and it digs harder. Without this the tractor
 // banks speed early on the light end of the track and then coasts through the heavy
@@ -118,7 +121,7 @@ export function engineTorque(gas, rpm) {
 // Tyre wear per second, as a fraction of the whole tread. Mild slip polishes the
 // rubber; sustained wheelspin eats through it in about two seconds. The floor
 // matters: without it a clean 14 second pull would also destroy the tyres.
-const WEAR_SLIP_FLOOR = 0.3;
+const WEAR_SLIP_FLOOR = 0.32;
 const WEAR_SCALE_S = 1.2;
 
 export function tyreWearRate(slip) {
@@ -357,15 +360,17 @@ function substep(state, input, dt) {
   state.wheelspin = spinning;
   state.tractionForce = effCeiling;
 
-  // --- cargo creeps forward under load, and it does not slide back ---
-  // A smooth, gripped pull barely moves the load. Wheelspin and a shocked
-  // drivetrain throw it forward, which is what makes a pull get heavier the
-  // further you go -- and the further it slides, the harder it digs in.
+  // --- cargo creeps forward, and it does not slide back ---
+  // Every run ends with the cargo at the front of the cart. Rough driving --
+  // wheelspin and a shocked drivetrain -- gets it there sooner, and a floor tied
+  // to distance guarantees it is fully shifted by the line even on a slow run.
   const loadRatio = clamp(pull / Math.max(ceiling, 1), 0, 1);
   const jerk = Math.max(0, (pull - (state.prevPull || 0)) / dt);
   const agitation = clamp(state.slip * 1.4 + jerk / 30000, 0, 2);
+  const creep = 0.055 + loadRatio * (0.02 + 0.09 * agitation);
+  const shiftFloor = clamp(state.distance / TRACK_M, 0, 1);
   state.loadShift = clamp(
-    (state.loadShift || 0) + loadRatio * (0.012 + 0.075 * agitation) * dt,
+    Math.max((state.loadShift || 0) + creep * dt, shiftFloor),
     0,
     1,
   );
