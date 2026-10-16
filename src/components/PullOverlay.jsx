@@ -126,10 +126,10 @@ function LoadGauge({ loadN, ceilingN }) {
   }
   return (
     <div className="pull-gauge pull-gauge-load">
-      <span className="pull-gauge-label">SLEEP</span>
+      <span className="pull-gauge-label">LOAD</span>
       <span className="pull-cells">
         {cells}
-        <span className="pull-ceiling-mark" style={{ left: `${ceilAt * 100}%` }} title=" grip ceiling" />
+        <span className="pull-ceiling-mark" style={{ left: `${ceilAt * 100}%` }} title="grip ceiling" />
       </span>
       <span className={`pull-load-value ${over ? 'is-over' : ''}`}>
         {(loadN / 1000).toFixed(1)} kN
@@ -150,7 +150,7 @@ function Hud({ snap }) {
         </div>
         <div className="pull-readout">
           <span className="pull-readout-value">{kmh.toFixed(1)}</span>
-          <span className="pull-readout-unit">km/u</span>
+          <span className="pull-readout-unit">km/h</span>
         </div>
         <div className="pull-readout">
           <span className="pull-readout-value">{Math.round(snap.rpm)}</span>
@@ -160,20 +160,20 @@ function Hud({ snap }) {
       </div>
 
       <div className="pull-gauges">
-        <Bar value={snap.rpm} max={3200} label="TACHO" className="pull-tacho" />
+        <Bar value={snap.rpm} max={3200} label="RPM" className="pull-tacho" />
         <LoadGauge loadN={snap.sledN} ceilingN={snap.ceilingN} />
-        <Bar value={snap.distance} max={TRACK_M} label="BAAN" />
-        <Bar value={snap.tireHealth} max={1} label="BANDEN" className="pull-tyres" dangerBelow={0.34} />
+        <Bar value={snap.distance} max={TRACK_M} label="DISTANCE" />
+        <Bar value={snap.tireHealth} max={1} label="TYRES" className="pull-tyres" dangerBelow={0.34} />
       </div>
 
-      {snap.slip > 0.25 ? <div className="pull-alert pull-alert-spin">🔥 WIELRENNE!</div> : null}
-      {snap.rpm > REDLINE_RPM ? <div className="pull-alert pull-alert-rev">⚠️ TOERENTALLER!</div> : null}
+      {snap.slip > 0.25 ? <div className="pull-alert pull-alert-spin">🔥 WHEELSPIN!</div> : null}
+      {snap.rpm > REDLINE_RPM ? <div className="pull-alert pull-alert-rev">⚠️ OVER-REV!</div> : null}
       {snap.sledN > snap.ceilingN ? (
-        <div className="pull-alert pull-alert-load">⚓ SLEEP ZWAARDER DAN GRIP</div>
+        <div className="pull-alert pull-alert-load">⚓ LOAD EXCEEDS GRIP</div>
       ) : null}
-      {lugging ? <div className="pull-alert pull-alert-lug">⛽ MOTOR STIKT</div> : null}
+      {lugging ? <div className="pull-alert pull-alert-lug">⛽ ENGINE LUGGING</div> : null}
       {snap.distance < 0.5 && snap.gas > 0.6 && snap.clutchPedal > 0.7 ? (
-        <div className="pull-coach">⬆ LAAT A LANGZAAM OMHOOG — VOEL DE TREK ⬆</div>
+        <div className="pull-coach">⬆ RELEASE A SLOWLY — FEEL IT BITE ⬆</div>
       ) : null}
     </div>
   );
@@ -184,36 +184,36 @@ function ReadyScreen({ condition, highScore, onStart, onClose }) {
     <div className="pull-screen">
       <div className="pull-title">FULL PULL</div>
       <div className="pull-subtitle">
-        Sleep het karretje 100 meter over de baan. Zonder doorbanden. Zonder af te slaan.
+        Drag the cart 100 metres down the track. Without shredding the tyres. Without stalling.
       </div>
       <div className="pull-conditions">
         <div className="pull-conditions-row">
-          <kbd>A</kbd> / <kbd>←</kbd> koppeling — ingehouden = uitgekoppeld
+          <kbd>A</kbd> / <kbd>←</kbd> clutch — hold to disengage
         </div>
         <div className="pull-conditions-row">
-          <kbd>L</kbd> / <kbd>→</kbd> gas — ingehouden = erop
+          <kbd>L</kbd> / <kbd>→</kbd> throttle — hold to open up
         </div>
         <div className="pull-conditions-row">
-          <kbd>Esc</kbd> weg &nbsp;·&nbsp; <kbd>Space</kbd> starten
+          <kbd>Esc</kbd> close &nbsp;·&nbsp; <kbd>Space</kbd> start
         </div>
       </div>
       <div className="pull-howto">
         <p>
-          1. Houd <kbd>A</kbd> ingedrukt en geef vol gas. Laat de motor op toeren komen.
+          1. Hold <kbd>A</kbd> and pin the throttle. Let the engine build revs.
         </p>
         <p>
-          2. Laat <kbd>A</kbd> <em>langzaam</em> omhoog. Voel de trek. Te snel loslaten =
-          motor kapot. Te traag = je staat stil.
+          2. Let <kbd>A</kbd> up <em>slowly</em>. Feel it bite. Too fast = broken engine. Too
+          slow = you go nowhere.
         </p>
-        <p>3. Glij op het randje van de grip. Niet roken. Niet stikken. Rijden.</p>
+        <p>3. Ride the edge of the grip. No smoke. No stalling. Just pull.</p>
       </div>
-      <div className="pull-condition-tag">BAAN: {condition.label}</div>
+      <div className="pull-condition-tag">TRACK: {condition.label}</div>
       {highScore > 0 ? <div className="pull-highscore">HIGH SCORE: {highScore.toLocaleString()}</div> : null}
       <button className="pull-btn pull-btn-start" onClick={onStart}>
         START PULL
       </button>
       <button className="pull-btn pull-btn-ghost" onClick={onClose}>
-        terugs
+        back
       </button>
     </div>
   );
@@ -239,18 +239,18 @@ function DoneScreen({ snap, score, bonuses, highScore, isNewHigh, onRestart, onC
       ) : null}
       <div className="pull-result-stats">
         <span>max slip {Math.round(snap.maxSlip * 100)}%</span>
-        <span>neus {Math.round(snap.maxNose)}°</span>
+        <span>nose {Math.round(snap.maxNose)}°</span>
         <span>{snap.elapsed.toFixed(1)}s</span>
-        <span>banden {Math.round(snap.tireHealth * 100)}%</span>
+        <span>tyres {Math.round(snap.tireHealth * 100)}%</span>
       </div>
-      {isNewHigh ? <div className="pull-newhigh">NIEUWE HIGH SCORE</div> : (
+      {isNewHigh ? <div className="pull-newhigh">NEW HIGH SCORE</div> : (
         <div className="pull-highscore">HIGH SCORE: {highScore.toLocaleString()}</div>
       )}
       <button className="pull-btn pull-btn-start" onClick={onRestart}>
-        NOG EENS
+        PULL AGAIN
       </button>
       <button className="pull-btn pull-btn-ghost" onClick={onClose}>
-        terugs
+        back
       </button>
     </div>
   );
@@ -418,7 +418,7 @@ export function PullOverlay() {
   return (
     <>
       {!open ? (
-        <button className="pull-open-btn" onClick={openOverlay} title="Trekker trekken">
+        <button className="pull-open-btn" onClick={openOverlay} title="Tractor pull">
           <span className="pull-open-emoji">🚜</span>
           <span className="pull-open-text">FULL PULL</span>
         </button>

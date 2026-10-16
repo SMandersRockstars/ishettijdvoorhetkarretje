@@ -19,13 +19,13 @@
 export const TRACK_M = 100;
 
 const G = 9.81;
-const TRACTOR_KG = 2800;
-const CART_KG = 520; // loaded with crates
-const WHEEL_R = 0.55; // rear tyre radius, m
-const GEAR = 14; // total drive ratio, single gear
+export const TRACTOR_KG = 2800;
+export const CART_KG = 520; // loaded with crates
+export const WHEEL_R = 0.55; // rear tyre radius, m
+export const GEAR = 14; // total drive ratio, single gear
 const ENGINE_I = 4; // kg*m^2, engine + flywheel (heavy diesel + flywheel)
 const WHEEL_I = 420; // kg*m^2, wheels + drivetrain
-const VEHICLE_KG = TRACTOR_KG + CART_KG;
+export const VEHICLE_KG = TRACTOR_KG + CART_KG;
 
 export const IDLE_RPM = 800;
 export const REDLINE_RPM = 2900;
@@ -43,14 +43,14 @@ const LOCK_EPS = 0.5; // rad/s of engine/wheel mismatch treated as "already coup
 // The sled is hitched to what the track can actually give: it starts at roughly
 // half the grip ceiling and digs down to well past it. A fixed sled weight is
 // invisible — either the tractor never feels it, or nothing could ever move it.
-const SLED_START_FRAC = 0.6;
-const SLED_FINISH_FRAC = 1.25;
+const SLED_START_FRAC = 0.45;
+const SLED_FINISH_FRAC = 0.8;
 const SLED_CURVE = 2.0;
 // A real sled ploughs: drag it faster and it digs harder. Without this the tractor
 // banks speed early on the light end of the track and then coasts through the heavy
 // end, so the increasing weight is never felt. With it, speed decays all the way
 // down and the engine can actually be dragged under idle and die.
-const SLED_PLOW_K = 0.009;
+export const SLED_PLOW_K = 0.006;
 
 // Fixed internal timestep. The clutch damper is stiff; at 1/120 s the explicit
 // integrator stays well inside its stability region even at 30 fps presentation.
@@ -103,8 +103,14 @@ function idleFloor(rpm) {
   return clamp(gov, 0, torqueCurve(rpm) * 0.3);
 }
 
+// Full-throttle ground force is scaled against the dry grip ceiling. If the engine
+// is far stronger than the ground, every meaningful throttle breaks traction and
+// a burnout cannot be recovered -- the driver has no usable band. ~1.25x keeps
+// the throttle a traction control you modulate rather than a coin flip.
+export const TORQUE_SCALE = 1;
+
 export function engineTorque(gas, rpm) {
-  const peak = torqueCurve(rpm);
+  const peak = torqueCurve(rpm) * TORQUE_SCALE;
   if (gas < 0.08) return idleFloor(rpm);
   return peak * gas * limiter(rpm);
 }
@@ -215,6 +221,13 @@ function substep(state, input, dt) {
   state.tractionForce = maxPull;
 
   const slipAng = state.rpm * RPM2RAD - state.wheelOmega * GEAR;
+  // Kinematic wheelspin: the tyres are physically faster than the ground,
+  // regardless of what the torque balance currently says. `spinning` must honour
+  // this too. Deciding it on torque alone lets a state that stops being
+  // torque-limited fall into the gripped path, where v is assigned from an
+  // inflated wheel speed -- teleporting the vehicle forward and pumping free
+  // momentum into it every time the clutch oscillates.
+  const kinSpin = state.wheelOmega * WHEEL_R > state.v + 0.05;
   const iEngineRef = ENGINE_I * GEAR * GEAR;
   const iVehicleRef = VEHICLE_KG * WHEEL_R * WHEEL_R;
   const iFull = iEngineRef + WHEEL_I + iVehicleRef;
@@ -226,19 +239,26 @@ function substep(state, input, dt) {
   let clutchTorque;
   let spinning;
 
-  if (Math.abs(tcNeeded) <= cap) {
-    // Clutch can hold.
+  // The clutch holds whenever the pack can carry the torque. Locking is tracked
+  // with the previous state's flag rather than inferred from the current speed
+  // difference: inferring it made the hook-up collision re-fire on every substep
+  // while the tyres were spinning, pumping free momentum into the vehicle (felt
+  // as the tractor accelerating when the clutch pedal went down). The hook-up is
+  // now a one-shot event on a real unlocked -> locked transition.
+  const holds = Math.abs(tcNeeded) <= cap;
+
+  if (holds) {
+    const wasLocked = state.clutchLocked;
+    state.clutchLocked = true;
     clutchTorque = tcNeeded;
     const demanded = (Math.max(0, clutchTorque) * GEAR) / WHEEL_R;
     const pull = Math.min(demanded, maxPull);
-    spinning = demanded > pull + 1;
+    spinning = demanded > pull + 1 || kinSpin;
 
-    const wasLocked = Math.abs(slipAng) < LOCK_EPS;
-    state.clutchLocked = true;
-
-    if (!wasLocked) {
-      // Hook-up is an inelastic collision: angular momentum is conserved, energy
-      // is not. Skipping this makes the engine vanish instead of being dragged down.
+    if (!wasLocked && Math.abs(slipAng) >= LOCK_EPS) {
+      // Hook-up is a one-shot inelastic collision: angular momentum is conserved,
+      // energy is not. Skipping this makes the engine vanish instead of being
+      // dragged down.
       const coupledWheelI = spinning ? WHEEL_I : WHEEL_I + iVehicleRef;
       const iBody = spinning ? iEngineRef + WHEEL_I : iFull;
       const L = ENGINE_I * state.rpm * RPM2RAD * GEAR + coupledWheelI * state.wheelOmega;
@@ -264,12 +284,14 @@ function substep(state, input, dt) {
     }
     state.driveForce = pull;
   } else {
-    // Clutch slipping: soft damper clamped by the pack capacity.
+    // Slipping: engaged but the sides differ, or the demand exceeds the pack. The
+    // clutch sheds its capacity against the slip and keeps slipping until the
+    // speeds converge, so there is never an impulse to reconcile afterwards.
     state.clutchLocked = false;
     clutchTorque = clamp(slipAng * CLUTCH_DAMP, -cap, cap);
     const demanded = (Math.max(0, clutchTorque) * GEAR) / WHEEL_R;
     const pull = Math.min(demanded, maxPull);
-    spinning = demanded > pull + 1;
+    spinning = demanded > pull + 1 || kinSpin;
 
     const iWheel = spinning ? WHEEL_I : WHEEL_I + iVehicleRef;
     const wheelLoad = spinning ? pull * WHEEL_R : resist * WHEEL_R;
