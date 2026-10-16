@@ -6,6 +6,24 @@ const GROUND_Y = 352;
 const REAR_WHEEL = { cx: 600, cy: 300, r: 52 };
 const FRONT_WHEEL = { cx: 742, cy: 326, r: 26 };
 
+import { TRACK_M } from '../utils/pullSim.js';
+
+// Temporary test mode: drag the real photo of the karretje instead of the SVG cart.
+// Cargo-shift animation is switched off while this is on.
+const PHOTO_CART = true;
+const CART_PHOTO = {
+  src: '/assets/maikeldekar_cartoon.png',
+  w: 159,
+  h: 167,
+  x: 340,
+  y: 191,
+  // Side-view artwork, already perfectly level -- no tilt correction needed.
+  tiltStart: 0,
+  // pivot near the rear caster so the front of the cart is what swings
+  pivotFx: 0.35,
+  pivotFy: 0.95,
+};
+
 // The track is a dirt course in every condition -- only the moisture changes.
 // Each look is meant to be read at a glance: pale and dusty, dark and slick,
 // near-black with reflections, or churned to clods.
@@ -95,6 +113,51 @@ function TrackBand({ conditionId, distance, pivotX }) {
       <rect x="0" y={GROUND_Y} width="1000" height="18" fill={look.base} opacity="0.95" />
       <rect x="0" y={GROUND_Y} width="1000" height="4" fill={look.top} opacity="0.9" />
       {items}
+    </g>
+  );
+}
+
+// Chain between the tractor's drawbar and the cart. Links alternate flat/on-edge
+// like real chain, and the sag tightens as the load comes on -- slack chain when
+// coasting, near-straight when it is actually pulling.
+function Chain({ x1, y1, x2, y2, sag = 18, links = 8 }) {
+  const cx = (x1 + x2) / 2;
+  const cy = Math.max(y1, y2) + sag;
+  const at = (t) => {
+    const mt = 1 - t;
+    return {
+      x: mt * mt * x1 + 2 * mt * t * cx + t * t * x2,
+      y: mt * mt * y1 + 2 * mt * t * cy + t * t * y2,
+    };
+  };
+  const out = [];
+  for (let i = 0; i < links; i += 1) {
+    const a = at(i / links);
+    const b = at((i + 1) / links);
+    const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const flat = i % 2 === 0;
+    out.push(
+      <ellipse
+        key={i}
+        cx={mx}
+        cy={my}
+        rx={flat ? 9.5 : 6}
+        ry={5.8}
+        fill="none"
+        stroke="#a8a8a8"
+        strokeWidth="3"
+        transform={`rotate(${ang} ${mx} ${my})`}
+      />,
+    );
+  }
+  return (
+    <g>
+      {out}
+      {/* hitch shackles at both ends */}
+      <circle cx={x1} cy={y1} r={4.4} fill="#6a6a6a" stroke="#2a2a2a" strokeWidth="1.6" />
+      <circle cx={x2} cy={y2} r={4.4} fill="#6a6a6a" stroke="#2a2a2a" strokeWidth="1.6" />
     </g>
   );
 }
@@ -398,13 +461,40 @@ export function PullScene({
         opacity="0.5"
       />
 
-      {/* ---- the load: the company karretje, loaded with crates ---- */}
-      {/* rotates nose-down about the rear axle as the cargo shifts forward */}
-      <g
-        transform={`translate(0 ${sink}) rotate(${
-          Math.min(6, noseAngle * 0.22) + shift * 7
-        } 330 ${GROUND_Y})`}
-      >
+      {/* ---- the load: the company karretje ---- */}
+      {PHOTO_CART ? (
+        <g
+          transform={`rotate(${
+            CART_PHOTO.tiltStart *
+            (1 - Math.max(0, Math.min(1, distance / TRACK_M)))
+          } ${CART_PHOTO.x + CART_PHOTO.w * CART_PHOTO.pivotFx} ${
+            CART_PHOTO.y + CART_PHOTO.h * CART_PHOTO.pivotFy
+          })`}
+        >
+          {/* chain from the tractor's drawbar to the cart's front post */}
+          <Chain
+            x1={552}
+            y1={298}
+            x2={CART_PHOTO.x + CART_PHOTO.w * 0.95}
+            y2={300}
+            sag={22 - Math.max(0, Math.min(1, load01)) * 18}
+            links={8}
+          />
+          <image
+            href={CART_PHOTO.src}
+            x={CART_PHOTO.x}
+            y={CART_PHOTO.y}
+            width={CART_PHOTO.w}
+            height={CART_PHOTO.h}
+            preserveAspectRatio="xMidYMax meet"
+          />
+        </g>
+      ) : (
+        <g
+          transform={`translate(0 ${sink}) rotate(${
+            Math.min(6, noseAngle * 0.22)
+          } 330 ${GROUND_Y})`}
+        >
         {/* tow bar */}
         <line x1="470" y1="292" x2="556" y2="304" stroke="#8a8a8a" strokeWidth="6" strokeLinecap="round" />
         {/* cart frame */}
@@ -456,7 +546,8 @@ export function PullScene({
             opacity={0.5 + load01 * 0.4}
           />
         ) : null}
-      </g>
+        </g>
+      )}
 
       {/* ---- smoke trail: world-space, so the tractor pulls away from it ---- */}
       {!reducedMotion && smokeParticles.length > 0 ? (
