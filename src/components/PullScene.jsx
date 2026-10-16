@@ -24,6 +24,22 @@ const CART_PHOTO = {
   pivotFy: 0.95,
 };
 
+// Same guy, straining version. Swapped in once the load actually starts coming on.
+// Sized so the cart body and casters land on the same screen position as CART_PHOTO.
+const CART_PHOTO_HEAVY = {
+  src: '/assets/maikeldekar_pull.png',
+  w: 170,
+  h: 160,
+  x: 328,
+  y: 198,
+  tiltStart: 0,
+  pivotFx: 0.36,
+  pivotFy: 0.95,
+};
+
+// Fraction of cargo shift that flips Maikel into the straining pose.
+const CART_HEAVY_AT = 0.05;
+
 // The track is a dirt course in every condition -- only the moisture changes.
 // Each look is meant to be read at a glance: pale and dusty, dark and slick,
 // near-black with reflections, or churned to clods.
@@ -350,6 +366,8 @@ export function PullScene({
   const wheelDeg = (wheelAngle * 180) / Math.PI % 360;
   const pivotX = REAR_WHEEL.cx;
   const pivotY = GROUND_Y;
+  // Straining art once the cargo starts coming forward.
+  const cartArt = (loadShift || 0) >= CART_HEAVY_AT ? CART_PHOTO_HEAVY : CART_PHOTO;
 
   // Camera keeps the tractor roughly centre-right; the world slides past it.
   // A marker for metre m sits to the RIGHT when it is still ahead of us.
@@ -465,27 +483,27 @@ export function PullScene({
       {PHOTO_CART ? (
         <g
           transform={`rotate(${
-            CART_PHOTO.tiltStart *
+            cartArt.tiltStart *
             (1 - Math.max(0, Math.min(1, distance / TRACK_M)))
-          } ${CART_PHOTO.x + CART_PHOTO.w * CART_PHOTO.pivotFx} ${
-            CART_PHOTO.y + CART_PHOTO.h * CART_PHOTO.pivotFy
+          } ${cartArt.x + cartArt.w * cartArt.pivotFx} ${
+            cartArt.y + cartArt.h * cartArt.pivotFy
           })`}
         >
           {/* chain from the tractor's drawbar to the cart's front post */}
           <Chain
             x1={552}
             y1={298}
-            x2={CART_PHOTO.x + CART_PHOTO.w * 0.95}
+            x2={cartArt.x + cartArt.w * 0.95}
             y2={300}
             sag={22 - Math.max(0, Math.min(1, load01)) * 18}
             links={8}
           />
           <image
-            href={CART_PHOTO.src}
-            x={CART_PHOTO.x}
-            y={CART_PHOTO.y}
-            width={CART_PHOTO.w}
-            height={CART_PHOTO.h}
+            href={cartArt.src}
+            x={cartArt.x}
+            y={cartArt.y}
+            width={cartArt.w}
+            height={cartArt.h}
             preserveAspectRatio="xMidYMax meet"
           />
         </g>

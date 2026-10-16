@@ -361,20 +361,12 @@ function substep(state, input, dt) {
   state.wheelspin = spinning;
   state.tractionForce = effCeiling;
 
-  // --- cargo creeps forward, and it does not slide back ---
-  // Every run ends with the cargo at the front of the cart. Rough driving --
-  // wheelspin and a shocked drivetrain -- gets it there sooner, and a floor tied
-  // to distance guarantees it is fully shifted by the line even on a slow run.
+  // --- cargo weight is purely distance travelled ---
+  // The load builds as the rig crosses the field: nothing at the start line,
+  // fully shifted at the finish. Nothing else moves it -- no creep, no wheelspin,
+  // no drift while sitting still at the line.
   const loadRatio = clamp(pull / Math.max(ceiling, 1), 0, 1);
-  const jerk = Math.max(0, (pull - (state.prevPull || 0)) / dt);
-  const agitation = clamp(state.slip * 1.4 + jerk / 30000, 0, 2);
-  const creep = 0.055 + loadRatio * (0.02 + 0.09 * agitation);
-  const shiftFloor = clamp(state.distance / TRACK_M, 0, 1);
-  state.loadShift = clamp(
-    Math.max((state.loadShift || 0) + creep * dt, shiftFloor),
-    0,
-    1,
-  );
+  state.loadShift = clamp(state.distance / TRACK_M, 0, 1);
   state.prevPull = pull;
 
   // --- black smoke is unburnt diesel ---
