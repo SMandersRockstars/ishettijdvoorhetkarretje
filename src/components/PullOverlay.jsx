@@ -17,8 +17,16 @@ import {
 import '../styles/pull-game.css';
 
 const HS_KEY = 'karretje-full-pull-highscore';
-const CLUTCH_KEYS = ['KeyA', 'ArrowLeft'];
-const GAS_KEYS = ['KeyL', 'ArrowRight'];
+// Rate-based controls: hold to ramp a control up or down, rather than holding it
+// on/off. Clutch pressure is the inverse of the pedal -- more pressure means more
+// engaged.
+const CLUTCH_UP_KEYS = ['KeyA']; // more clutch pressure = more engaged
+const CLUTCH_DOWN_KEYS = ['KeyQ']; // less clutch pressure = slipping out
+const GAS_UP_KEYS = ['KeyL']; // more throttle
+const GAS_DOWN_KEYS = ['KeyO']; // less throttle
+// How fast each control sweeps from stop to full while its key is held.
+const CLUTCH_RATE = 0.85;
+const GAS_RATE = 1.2;
 
 const readHigh = () => {
   try {
@@ -53,10 +61,12 @@ function snapshot(s) {
     driveForce: s.driveForce,
     tractionForce: s.tractionForce,
     sledN: sledResistance(s),
+    loadShift: s.loadShift,
     ceilingN: s.gripCeilingN,
     condition: s.condition,
     gas: s.gas,
     clutchPedal: s.clutchPedal,
+    clutchPressure: 1 - s.clutchPedal,
   };
 }
 
@@ -172,8 +182,8 @@ function Hud({ snap }) {
         <div className="pull-alert pull-alert-load">⚓ LOAD EXCEEDS GRIP</div>
       ) : null}
       {lugging ? <div className="pull-alert pull-alert-lug">⛽ ENGINE LUGGING</div> : null}
-      {snap.distance < 0.5 && snap.gas > 0.6 && snap.clutchPedal > 0.7 ? (
-        <div className="pull-coach">⬆ RELEASE A SLOWLY — FEEL IT BITE ⬆</div>
+      {snap.distance < 0.5 && snap.gas > 0.6 && snap.clutchPressure < 0.3 ? (
+        <div className="pull-coach">⬆ FEED IT IN WITH A — RELEASE WITH Q ⬆</div>
       ) : null}
     </div>
   );
@@ -188,10 +198,10 @@ function ReadyScreen({ condition, highScore, onStart, onClose }) {
       </div>
       <div className="pull-conditions">
         <div className="pull-conditions-row">
-          <kbd>A</kbd> / <kbd>←</kbd> clutch — hold to disengage
+          <kbd>A</kbd> more clutch pressure &nbsp;·&nbsp; <kbd>Q</kbd> less
         </div>
         <div className="pull-conditions-row">
-          <kbd>L</kbd> / <kbd>→</kbd> throttle — hold to open up
+          <kbd>L</kbd> more throttle &nbsp;·&nbsp; <kbd>O</kbd> less
         </div>
         <div className="pull-conditions-row">
           <kbd>Esc</kbd> close &nbsp;·&nbsp; <kbd>Space</kbd> start
@@ -199,11 +209,12 @@ function ReadyScreen({ condition, highScore, onStart, onClose }) {
       </div>
       <div className="pull-howto">
         <p>
-          1. Hold <kbd>A</kbd> and pin the throttle. Let the engine build revs.
+          1. With the clutch out, hold <kbd>L</kbd> and let the engine build revs. Back off
+          with <kbd>O</kbd>.
         </p>
         <p>
-          2. Let <kbd>A</kbd> up <em>slowly</em>. Feel it bite. Too fast = broken engine. Too
-          slow = you go nowhere.
+          2. Feed the clutch in with <kbd>A</kbd>, slowly. Feel it bite. Too much = broken
+          engine. <kbd>Q</kbd> takes it back out.
         </p>
         <p>3. Ride the edge of the grip. No smoke. No stalling. Just pull.</p>
       </div>
@@ -269,7 +280,14 @@ export function PullOverlay() {
   const [highScore, setHighScore] = useState(readHigh);
 
   const simRef = useRef(null);
-  const inputRef = useRef({ clutch: true, gas: false });
+  const inputRef = useRef({
+    clutchUp: false,
+    clutchDown: false,
+    gasUp: false,
+    gasDown: false,
+  });
+  // Persistent pedal positions, ramped by whichever keys are held.
+  const cmdRef = useRef({ clutchPressure: 0, gas: 0 });
   const rafRef = useRef(0);
   const lastRef = useRef(0);
   const wasLockedRef = useRef(false);
@@ -322,7 +340,15 @@ export function PullOverlay() {
       lastRef.current = now;
 
       const inp = inputRef.current;
-      stepSim(s, { gas: inp.gas ? 1 : 0, clutchPedal: inp.clutch ? 1 : 0 }, dt);
+      const cmd = cmdRef.current;
+      if (inp.clutchUp) cmd.clutchPressure += CLUTCH_RATE * dt;
+      if (inp.clutchDown) cmd.clutchPressure -= CLUTCH_RATE * dt;
+      if (inp.gasUp) cmd.gas += GAS_RATE * dt;
+      if (inp.gasDown) cmd.gas -= GAS_RATE * dt;
+      cmd.clutchPressure = Math.min(1, Math.max(0, cmd.clutchPressure));
+      cmd.gas = Math.min(1, Math.max(0, cmd.gas));
+
+      stepSim(s, { gas: cmd.gas, clutchPedal: 1 - cmd.clutchPressure }, dt);
 
       if (soundOnRef.current) {
         sound.update({ rpm: s.rpm, gas: s.gas, slip: s.slip });
@@ -346,7 +372,13 @@ export function PullOverlay() {
     const s = createSimState(condition);
     s.status = 'pulling';
     simRef.current = s;
-    inputRef.current = { clutch: true, gas: false };
+    inputRef.current = {
+      clutchUp: false,
+      clutchDown: false,
+      gasUp: false,
+      gasDown: false,
+    };
+    cmdRef.current = { clutchPressure: 0, gas: 0 };
     wasLockedRef.current = false;
     lastRef.current = 0;
     setSnap(snapshot(s));
@@ -384,18 +416,28 @@ export function PullOverlay() {
         if (phase !== 'running') startRun();
         return;
       }
-      if (CLUTCH_KEYS.includes(e.code)) {
+      if (CLUTCH_UP_KEYS.includes(e.code)) {
         e.preventDefault();
-        inputRef.current.clutch = true;
+        inputRef.current.clutchUp = true;
       }
-      if (GAS_KEYS.includes(e.code)) {
+      if (CLUTCH_DOWN_KEYS.includes(e.code)) {
         e.preventDefault();
-        inputRef.current.gas = true;
+        inputRef.current.clutchDown = true;
+      }
+      if (GAS_UP_KEYS.includes(e.code)) {
+        e.preventDefault();
+        inputRef.current.gasUp = true;
+      }
+      if (GAS_DOWN_KEYS.includes(e.code)) {
+        e.preventDefault();
+        inputRef.current.gasDown = true;
       }
     };
     const onUp = (e) => {
-      if (CLUTCH_KEYS.includes(e.code)) inputRef.current.clutch = false;
-      if (GAS_KEYS.includes(e.code)) inputRef.current.gas = false;
+      if (CLUTCH_UP_KEYS.includes(e.code)) inputRef.current.clutchUp = false;
+      if (CLUTCH_DOWN_KEYS.includes(e.code)) inputRef.current.clutchDown = false;
+      if (GAS_UP_KEYS.includes(e.code)) inputRef.current.gasUp = false;
+      if (GAS_DOWN_KEYS.includes(e.code)) inputRef.current.gasDown = false;
     };
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
@@ -433,6 +475,7 @@ export function PullOverlay() {
             slip={snap.slip}
             lugging={lugging}
             load01={load01}
+            loadShift={snap.loadShift}
             condition={condition}
             reducedMotion={reduced}
           />
@@ -441,8 +484,8 @@ export function PullOverlay() {
 
           {phase === 'running' ? (
             <div className="pull-pedals">
-              <Pedal name="KOPPELING" value={snap.clutchPedal} hint="A / ←" />
-              <Pedal name="GAS" value={snap.gas} hint="L / →" />
+              <Pedal name="CLUTCH PRESSURE" value={snap.clutchPressure} hint="Q / A" />
+              <Pedal name="THROTTLE" value={snap.gas} hint="O / L" />
             </div>
           ) : null}
 

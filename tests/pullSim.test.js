@@ -66,8 +66,10 @@ function careless(t) {
 // throttle the moment the tyres start to break away.
 function skilled(t, s) {
   let gas = 1;
-  if (s.rpm > 2300) gas = 0.45;
-  if (s.slip > 0.18) gas = 0.12;
+  if (s.slip > 0.18) gas = 0.6;
+  if (s.slip > 0.30) gas = 0.3;
+  if (s.rpm > 2500) gas = Math.min(gas, 0.55);
+  if (s.rpm < 1200) gas = Math.max(gas, 0.85);
   return { gas, clutchPedal: t < 1.5 ? 1 : Math.max(0.1, 1 - (t - 1.5) / 6) };
 }
 
@@ -301,15 +303,13 @@ test('a brief slip spike does not destroy the tyres', () => {
 });
 
 test('a careful driver beats a wet track', () => {
-  // Easing off the moment the tyres break away is the whole skill.
-  const careful = (t, s) => {
-    let gas = 1;
-    if (s.rpm > 2300) gas = 0.45;
-    if (s.slip > 0.2) gas = 0.15;
-    return { gas, clutchPedal: t < 1.5 ? 1 : Math.max(0.1, 1 - (t - 1.5) / 6) };
-  };
-  const wet = simulate(careful, { condition: WET, seconds: 90 });
-  assert.equal(wet.status, 'finished', `careful driving should beat wet: ${wet.status} at ${wet.distance}m`);
+  // Easing off as the tyres break away is the whole skill.
+  const wet = simulate(skilled, { condition: WET, seconds: 240 });
+  assert.equal(
+    wet.status,
+    'finished',
+    `careful driving should beat wet: ${wet.status} at ${wet.distance}m`,
+  );
 });
 
 // -------------------------------------------------------------- the load

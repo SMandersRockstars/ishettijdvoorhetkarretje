@@ -193,6 +193,7 @@ export function PullScene({
   slip = 0,
   lugging = false,
   load01 = 0,
+  loadShift = 0,
   condition = { id: 'dry' },
   reducedMotion = false,
 }) {
@@ -238,6 +239,8 @@ export function PullScene({
   // The heavier the sled, the deeper the load digs in.
   const sink = load01 * 8;
   const rutDepth = 2 + load01 * 7;
+  // Cargo migrates toward the tractor and the front of the trailer digs in.
+  const shift = Math.min(1, Math.max(0, loadShift));
 
   return (
     <svg viewBox="0 0 1000 420" className="pull-svg" preserveAspectRatio="xMidYMid meet">
@@ -309,7 +312,12 @@ export function PullScene({
       />
 
       {/* ---- the load: the company karretje, loaded with crates ---- */}
-      <g transform={`translate(0 ${sink}) rotate(${Math.min(6, noseAngle * 0.22)} 450 ${GROUND_Y})`}>
+      {/* rotates nose-down about the rear axle as the cargo shifts forward */}
+      <g
+        transform={`translate(0 ${sink}) rotate(${
+          Math.min(6, noseAngle * 0.22) + shift * 7
+        } 330 ${GROUND_Y})`}
+      >
         {/* tow bar */}
         <line x1="470" y1="292" x2="556" y2="304" stroke="#8a8a8a" strokeWidth="6" strokeLinecap="round" />
         {/* cart frame */}
@@ -322,17 +330,37 @@ export function PullScene({
         ))}
         {/* handle */}
         <path d="M300 248 L282 232 L272 232" stroke="#c8c8d2" strokeWidth="5" fill="none" strokeLinecap="round" />
-        {/* crates: bottom row of three, two on top of those, one on top */}
-        <Crate x={303} y={288} w={55} h={34} style="heineken" />
-        <Crate x={359} y={288} w={55} h={34} style="cola" />
-        <Crate x={415} y={288} w={55} h={34} style="hertog" />
-        <Crate x={331} y={252} w={55} h={34} style="jupiler" />
-        <Crate x={387} y={252} w={55} h={34} style="wijn" />
-        <BottleNecks x={363} y={216} count={5} spacing={10.5} />
-        <Crate x={359} y={216} w={55} h={34} style="frites" />
+        {/* crates: bottom row of three, two on top of those, one on top.
+            Everything slides forward with the load; the taller the stack, the
+            further it goes, and the whole pile tips with it. */}
+        <g
+          transform={`translate(${shift * 13} ${shift * 1.5}) rotate(${shift * 2.5} 386 300)`}
+        >
+          <Crate x={303} y={288} w={55} h={34} style="heineken" />
+          <Crate x={359} y={288} w={55} h={34} style="cola" />
+          <Crate x={415} y={288} w={55} h={34} style="hertog" />
+          <g transform={`translate(${shift * 5} 0)`}>
+            <Crate x={331} y={252} w={55} h={34} style="jupiler" />
+            <Crate x={387} y={252} w={55} h={34} style="wijn" />
+          </g>
+          <g transform={`translate(${shift * 10} 0)`}>
+            <BottleNecks x={363} y={216} count={5} spacing={10.5} />
+            <Crate x={359} y={216} w={55} h={34} style="frites" />
+          </g>
+        </g>
         {/* cart wheels */}
         <Wheel cx={330} cy={336} r={16} angle={wheelDeg} hub="#4a4a4a" />
         <Wheel cx={452} cy={336} r={16} angle={wheelDeg} hub="#4a4a4a" />
+        {/* front of the trailer ploughing into the dirt as the load settles on it */}
+        {!reducedMotion && shift > 0.05 ? (
+          <path
+            d={`M${452 + shift * 10} ${GROUND_Y + sink + shift * 8} q ${
+              12 + shift * 10
+            } ${-16 * shift} ${26 + shift * 16} ${-2 * shift} Z`}
+            fill="#6b421d"
+            opacity={0.45 + shift * 0.5}
+          />
+        ) : null}
         {/* dirt pushed up by the trailing wheels as the load bites */}
         {!reducedMotion && load01 > 0.15 ? (
           <path

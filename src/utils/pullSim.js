@@ -131,6 +131,31 @@ export const TIRE_LIFE_AT_FULL_SLIP_S = 1 / tyreWearRate(1);
 // Maximum horizontal force the ground will take, in newtons, for a given drawbar
 // pull. Pulling harder transfers weight to the rear axle, which buys more grip —
 // that feedback loop is the heart of the sport. Worn tyres get less of it.
+// A tyre that has broken away and is sliding only delivers the KINETIC fraction
+// of what a gripping (static) tyre can. Roughly 3/4, which is why losing traction
+// costs you actual pulling force, not just tread. Also why a burning tyre cannot
+// lift the nose: it never produces enough ground reaction to transfer weight.
+export const KINETIC_FRACTION = 0.72;
+// How much harder the sled pulls once the cargo has fully slid forward onto the
+// ground skid. This is the real reason a pull gets heavier: the load does not
+// just sit there, it migrates and jams itself into the dirt.
+export const SHIFT_GAIN = 0.45;
+// Grip is not a switch. It climbs from the static value to a peak at a small
+// amount of slip, then decays to the kinetic value at full spin. Maximum pull --
+// and maximum nose lift -- lives at that small slip, which is why tractor pullers
+// run the tyres just barely twisting.
+export const PEAK_SLIP = 0.12;
+export const STATIC_FRACTION = 0.92;
+
+export function frictionScale(slip) {
+  const s = Math.min(1, Math.max(0, slip));
+  if (s <= PEAK_SLIP) {
+    return STATIC_FRACTION + (1 - STATIC_FRACTION) * (s / PEAK_SLIP);
+  }
+  const t = (s - PEAK_SLIP) / (1 - PEAK_SLIP);
+  return 1 - (1 - KINETIC_FRACTION) * t;
+}
+
 export function computeTraction(condition, tireHealth, drawbarN) {
   const weight = VEHICLE_KG * G;
   const transfer = clamp((drawbarN * TOW_HEIGHT) / (WHEELBASE * weight), 0, 0.3);
@@ -162,6 +187,9 @@ export function createSimState(condition = TRACK_CONDITIONS[0]) {
     gripCeilingN: ceiling,
     sledStartN: ceiling * SLED_START_FRAC,
     sledFinishN: ceiling * SLED_FINISH_FRAC,
+    // 0 = cargo sitting neatly, 1 = cargo fully slid forward onto the skid.
+    loadShift: 0,
+    prevPull: 0,
     clutchLocked: false,
     wheelspin: false,
     condition,
@@ -182,7 +210,10 @@ export function gripCeiling(condition, tireHealth = 1) {
 // gentle off the line, brutal in the last twenty metres.
 export function sledResistance(state) {
   const t = clamp(state.distance / TRACK_M, 0, 1);
-  return state.sledStartN + (state.sledFinishN - state.sledStartN) * Math.pow(t, SLED_CURVE);
+  const base =
+    state.sledStartN + (state.sledFinishN - state.sledStartN) * Math.pow(t, SLED_CURVE);
+  // Cargo that has slid forward jams the sled into the dirt and it pulls harder.
+  return base * (1 + SHIFT_GAIN * (state.loadShift || 0));
 }
 
 function resistForce(state) {
@@ -216,9 +247,15 @@ function substep(state, input, dt) {
   const engineBrake = 12 + state.rpm * 0.02;
   const resist = resistForce(state);
 
-  // Grip ceiling for the current surface and tyre wear.
-  const maxPull = gripCeiling(state.condition, state.tireHealth);
-  state.tractionForce = maxPull;
+  // Grip ceiling for the current surface and tyre wear. Static while the tyres
+  // hold, kinetic once they slide.
+  const ceiling = gripCeiling(state.condition, state.tireHealth);
+  const effCeiling = ceiling * frictionScale(state.slip);
+
+  const groundForce = (demanded) => ({
+    pull: Math.min(demanded, effCeiling),
+    spinning: demanded > effCeiling + 1 || kinSpin,
+  });
 
   const slipAng = state.rpm * RPM2RAD - state.wheelOmega * GEAR;
   // Kinematic wheelspin: the tyres are physically faster than the ground,
@@ -238,6 +275,7 @@ function substep(state, input, dt) {
 
   let clutchTorque;
   let spinning;
+  let pull;
 
   // The clutch holds whenever the pack can carry the torque. Locking is tracked
   // with the previous state's flag rather than inferred from the current speed
@@ -252,8 +290,7 @@ function substep(state, input, dt) {
     state.clutchLocked = true;
     clutchTorque = tcNeeded;
     const demanded = (Math.max(0, clutchTorque) * GEAR) / WHEEL_R;
-    const pull = Math.min(demanded, maxPull);
-    spinning = demanded > pull + 1 || kinSpin;
+    ({ pull, spinning } = groundForce(demanded));
 
     if (!wasLocked && Math.abs(slipAng) >= LOCK_EPS) {
       // Hook-up is a one-shot inelastic collision: angular momentum is conserved,
@@ -290,8 +327,7 @@ function substep(state, input, dt) {
     state.clutchLocked = false;
     clutchTorque = clamp(slipAng * CLUTCH_DAMP, -cap, cap);
     const demanded = (Math.max(0, clutchTorque) * GEAR) / WHEEL_R;
-    const pull = Math.min(demanded, maxPull);
-    spinning = demanded > pull + 1 || kinSpin;
+    ({ pull, spinning } = groundForce(demanded));
 
     const iWheel = spinning ? WHEEL_I : WHEEL_I + iVehicleRef;
     const wheelLoad = spinning ? pull * WHEEL_R : resist * WHEEL_R;
@@ -319,12 +355,35 @@ function substep(state, input, dt) {
   }
 
   state.wheelspin = spinning;
+  state.tractionForce = effCeiling;
+
+  // --- cargo creeps forward under load, and it does not slide back ---
+  // A smooth, gripped pull barely moves the load. Wheelspin and a shocked
+  // drivetrain throw it forward, which is what makes a pull get heavier the
+  // further you go -- and the further it slides, the harder it digs in.
+  const loadRatio = clamp(pull / Math.max(ceiling, 1), 0, 1);
+  const jerk = Math.max(0, (pull - (state.prevPull || 0)) / dt);
+  const agitation = clamp(state.slip * 1.4 + jerk / 30000, 0, 2);
+  state.loadShift = clamp(
+    (state.loadShift || 0) + loadRatio * (0.012 + 0.075 * agitation) * dt,
+    0,
+    1,
+  );
+  state.prevPull = pull;
   state.wheelAngle += state.wheelOmega * dt;
   state.distance += state.v * dt;
   state.maxSlip = Math.max(state.maxSlip, state.slip);
 
   // --- nose lift: torque reaction tips the front end up ---
-  const noseDrive = clamp((state.driveForce / Math.max(maxPull, 1) - 0.72) * 1.35, 0, 1);
+  // Nose lift is weight transfer: the ground pushing back through the tyres.
+  // A sliding tyre tops out at the kinetic ceiling, so it cannot raise the front
+  // end -- only genuine traction, pushing above what a burning tyre could ever
+  // produce, tips the nose up.
+  const noseDrive = clamp(
+    (state.driveForce / Math.max(ceiling, 1) - KINETIC_FRACTION) * 1.35,
+    0,
+    1,
+  );
   const speedDamp = clamp(1 - state.v / 9, 0, 1);
   const noseTarget = noseDrive * speedDamp * 26;
   state.noseAngle += (noseTarget - state.noseAngle) * clamp(dt * 4.5, 0, 1);
