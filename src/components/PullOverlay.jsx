@@ -10,6 +10,7 @@ import {
   TRACK_CONDITIONS,
   createSimState,
   stepSim,
+  sledResistance,
   scoreRun,
   resultFor,
 } from '../utils/pullSim';
@@ -51,6 +52,8 @@ function snapshot(s) {
     clutchLocked: s.clutchLocked,
     driveForce: s.driveForce,
     tractionForce: s.tractionForce,
+    sledN: sledResistance(s),
+    ceilingN: s.gripCeilingN,
     condition: s.condition,
     gas: s.gas,
     clutchPedal: s.clutchPedal,
@@ -103,6 +106,38 @@ function Pedal({ name, value, hint }) {
   );
 }
 
+// Load gauge with the grip ceiling marked, so you can see the sled pass the point
+// where the ground can no longer help you.
+function LoadGauge({ loadN, ceilingN }) {
+  const max = ceilingN * 1.35;
+  const segments = 28;
+  const filled = Math.max(0, Math.min(1, loadN / max));
+  const ceilAt = ceilingN / max;
+  const over = loadN > ceilingN;
+  const cells = [];
+  for (let i = 0; i < segments; i += 1) {
+    const on = i / segments < filled;
+    cells.push(
+      <span
+        key={i}
+        className={`pull-cell ${on ? 'on' : ''} ${on && over ? 'danger' : ''}`}
+      />,
+    );
+  }
+  return (
+    <div className="pull-gauge pull-gauge-load">
+      <span className="pull-gauge-label">SLEEP</span>
+      <span className="pull-cells">
+        {cells}
+        <span className="pull-ceiling-mark" style={{ left: `${ceilAt * 100}%` }} title=" grip ceiling" />
+      </span>
+      <span className={`pull-load-value ${over ? 'is-over' : ''}`}>
+        {(loadN / 1000).toFixed(1)} kN
+      </span>
+    </div>
+  );
+}
+
 function Hud({ snap }) {
   const kmh = snap.v * 3.6;
   const lugging = snap.clutchLocked && snap.rpm < 1100 && snap.gas > 0.4;
@@ -126,12 +161,16 @@ function Hud({ snap }) {
 
       <div className="pull-gauges">
         <Bar value={snap.rpm} max={3200} label="TACHO" className="pull-tacho" />
+        <LoadGauge loadN={snap.sledN} ceilingN={snap.ceilingN} />
         <Bar value={snap.distance} max={TRACK_M} label="BAAN" />
         <Bar value={snap.tireHealth} max={1} label="BANDEN" className="pull-tyres" dangerBelow={0.34} />
       </div>
 
       {snap.slip > 0.25 ? <div className="pull-alert pull-alert-spin">🔥 WIELRENNE!</div> : null}
       {snap.rpm > REDLINE_RPM ? <div className="pull-alert pull-alert-rev">⚠️ TOERENTALLER!</div> : null}
+      {snap.sledN > snap.ceilingN ? (
+        <div className="pull-alert pull-alert-load">⚓ SLEEP ZWAARDER DAN GRIP</div>
+      ) : null}
       {lugging ? <div className="pull-alert pull-alert-lug">⛽ MOTOR STIKT</div> : null}
       {snap.distance < 0.5 && snap.gas > 0.6 && snap.clutchPedal > 0.7 ? (
         <div className="pull-coach">⬆ LAAT A LANGZAAM OMHOOG — VOEL DE TREK ⬆</div>
@@ -373,6 +412,7 @@ export function PullOverlay() {
   }, [sound]);
 
   const lugging = snap.clutchLocked && snap.rpm < 1100 && snap.gas > 0.4;
+  const load01 = Math.min(1, snap.sledN / Math.max(snap.ceilingN * 1.25, 1));
   const shake = !reduced && phase === 'running' && (snap.slip > 0.35 || snap.rpm > REDLINE_RPM);
 
   return (
@@ -392,6 +432,7 @@ export function PullOverlay() {
             distance={snap.distance}
             slip={snap.slip}
             lugging={lugging}
+            load01={load01}
             condition={condition}
             reducedMotion={reduced}
           />

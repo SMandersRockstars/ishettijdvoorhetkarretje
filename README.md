@@ -99,9 +99,22 @@ fixed internal timestep. It is covered by unit tests:
 npm test          # node --test tests/*.test.js
 ```
 
+**Why the load bites.** The sled is hitched to what the track can give: it starts at
+about 55–60% of the surface's grip ceiling and digs down to roughly 125% of it over
+the 100 m. A sled that heavy cannot be dragged at speed, so the tractor bleeds speed
+all the way to the line — expect to cross at roughly 75% of your peak speed. A sled
+also ploughs: drag it faster and it digs harder, which is what stops you banking
+speed early on the light end of the track and coasting through the heavy end.
+
+Because the finish load exceeds the grip ceiling, mashing the throttle is not a
+strategy — it just cooks the tyres 10–20 m short of the line. Lift off when the tyres
+break away.
+
 High score is stored in `localStorage` under `karretje-full-pull-highscore`.
-Track grip is randomised per run (dry / damp / wet / mud). Sound is synthesised and
-respects the "volledige ervaring" gate; animation respects `prefers-reduced-motion`.
+Track grip is randomised per run (packed dirt / damp / wet / mud) and the sled is
+rescaled to match, so every surface is a fight rather than some being free wins.
+Sound is synthesised and respects the "volledige ervaring" gate; animation respects
+`prefers-reduced-motion`.
 
 ## Feedback en bijdragen!!
 

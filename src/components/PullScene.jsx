@@ -192,6 +192,7 @@ export function PullScene({
   distance = 0,
   slip = 0,
   lugging = false,
+  load01 = 0,
   condition = { id: 'dry' },
   reducedMotion = false,
 }) {
@@ -234,6 +235,9 @@ export function PullScene({
 
   const dirtCount = reducedMotion ? 0 : Math.round(Math.min(1, slip / 0.5) * 12);
   const exhaustCount = reducedMotion ? 0 : lugging ? 6 : 2;
+  // The heavier the sled, the deeper the load digs in.
+  const sink = load01 * 8;
+  const rutDepth = 2 + load01 * 7;
 
   return (
     <svg viewBox="0 0 1000 420" className="pull-svg" preserveAspectRatio="xMidYMid meet">
@@ -292,8 +296,20 @@ export function PullScene({
         );
       })()}
 
+      {/* rut torn up behind the tractor, deeper as the load builds */}
+      <path
+        d={`M0 ${GROUND_Y - 2} L${pivotX} ${GROUND_Y - 2} L${pivotX} ${GROUND_Y + rutDepth} L0 ${GROUND_Y + rutDepth} Z`}
+        fill="#5a3a1c"
+        opacity="0.85"
+      />
+      <path
+        d={`M0 ${GROUND_Y - 2} L${pivotX} ${GROUND_Y - 2} L${pivotX} ${GROUND_Y} L0 ${GROUND_Y} Z`}
+        fill="#8a5a2b"
+        opacity="0.5"
+      />
+
       {/* ---- the load: the company karretje, loaded with crates ---- */}
-      <g transform={`rotate(${Math.min(6, noseAngle * 0.22)} 450 ${GROUND_Y})`}>
+      <g transform={`translate(0 ${sink}) rotate(${Math.min(6, noseAngle * 0.22)} 450 ${GROUND_Y})`}>
         {/* tow bar */}
         <line x1="470" y1="292" x2="556" y2="304" stroke="#8a8a8a" strokeWidth="6" strokeLinecap="round" />
         {/* cart frame */}
@@ -317,6 +333,14 @@ export function PullScene({
         {/* cart wheels */}
         <Wheel cx={330} cy={336} r={16} angle={wheelDeg} hub="#4a4a4a" />
         <Wheel cx={452} cy={336} r={16} angle={wheelDeg} hub="#4a4a4a" />
+        {/* dirt pushed up by the trailing wheels as the load bites */}
+        {!reducedMotion && load01 > 0.15 ? (
+          <path
+            d={`M${306 - load01 * 26} ${GROUND_Y + sink} q ${10 + load01 * 8} ${-14 * load01} ${22 + load01 * 14} ${-3 * load01} Z`}
+            fill="#6b421d"
+            opacity={0.5 + load01 * 0.4}
+          />
+        ) : null}
       </g>
 
       {/* ---- the tractor: whole body tips back on the reaction ---- */}

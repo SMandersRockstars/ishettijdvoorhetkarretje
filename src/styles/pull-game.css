@@ -200,6 +200,41 @@
   top: 200px;
 }
 
+.pull-alert-load {
+  color: #ffb84d;
+  text-shadow: 0 0 12px rgba(255, 160, 60, 0.7);
+  top: 234px;
+  font-size: 20px;
+}
+
+/* ---- load gauge ---- */
+
+.pull-gauge-load .pull-cells {
+  position: relative;
+}
+
+.pull-ceiling-mark {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 18px;
+  background: #8fd6ff;
+  box-shadow: 0 0 6px rgba(143, 214, 255, 0.8);
+  pointer-events: none;
+}
+
+.pull-load-value {
+  color: #e8d5ae;
+  font-size: 13px;
+  min-width: 62px;
+  text-align: right;
+}
+
+.pull-load-value.is-over {
+  color: #ffb84d;
+  font-weight: bold;
+}
+
 /* ---- pedals ---- */
 
 .pull-pedals {
